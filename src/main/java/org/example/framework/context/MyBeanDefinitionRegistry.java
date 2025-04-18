@@ -11,7 +11,7 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
 
     private final Map<String, BeanDefinition> beanDefinitions;
 
-    private MyBeanDefinitionRegistry() {
+    MyBeanDefinitionRegistry() {
         beanDefinitions = new HashMap<>();
     }
 
