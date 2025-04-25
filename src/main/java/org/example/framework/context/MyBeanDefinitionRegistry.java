@@ -1,11 +1,9 @@
 package org.example.framework.context;
 
 import org.example.framework.core.BeanDefinitionRegistry;
+import org.example.framework.exception.BeanException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
 
@@ -17,14 +15,21 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
 
     @Override
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
-        if(containsBeanDefinition(beanName))
-           return;
+        Objects.requireNonNull(beanDefinition, "BeanDefinition is null");
+        Objects.requireNonNull(beanName, "BeanName is null");
+
+        if(containsBeanDefinition(beanName)) return;
+
         beanDefinitions.put(beanName, beanDefinition);
     }
 
     @Override
     public BeanDefinition getBeanDefinition(String beanName) {
-        return beanDefinitions.get(beanName);
+        Objects.requireNonNull(beanName, "BeanName is null");
+        BeanDefinition beanDefinition = beanDefinitions.get(beanName);
+        if (beanDefinition == null)
+            throw new BeanException(BeanException.BeanExceptionCode.BEANDEFINITION_NOT_FOUND);
+        return beanDefinition;
     }
 
     @Override
