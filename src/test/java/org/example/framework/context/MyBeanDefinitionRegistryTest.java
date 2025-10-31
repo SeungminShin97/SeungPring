@@ -20,11 +20,7 @@ class MyBeanDefinitionRegistryTest {
     static class dummyClas{}
 
     private BeanDefinition createDummyBeanDefinition(String name, Class<?> clazz) {
-        BeanDefinition beanDefinition = new BeanDefinition();
-        beanDefinition.setBeanClass(clazz);
-        beanDefinition.setBeanName(name);
-        beanDefinition.setScope(ScopeType.SINGLETON);
-        return beanDefinition;
+        return new BeanDefinition(clazz, name, ScopeType.SINGLETON);
     }
 
     @Test
