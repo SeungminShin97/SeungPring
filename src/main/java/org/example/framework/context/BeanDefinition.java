@@ -5,6 +5,12 @@ public class BeanDefinition {
     private ScopeType scope;
     private String beanName;
 
+    public BeanDefinition(Class<?> clazz, String beanName, ScopeType scopeType) {
+        this.beanClass = clazz;
+        this.beanName = beanName;
+        this.scope = scopeType;
+    }
+
     public Class<?> getBeanClass() {
         return beanClass;
     }
@@ -14,18 +20,6 @@ public class BeanDefinition {
     }
 
     public String getBeanName() { return beanName; }
-
-    public void setBeanClass(Class<?> beanClass) {
-        this.beanClass = beanClass;
-    }
-
-    public void setScope(ScopeType scope) {
-        this.scope = scope;
-    }
-
-    public void setBeanName(String beanName) {
-        this.beanName = beanName;
-    }
 
     public boolean isSingleton() {
         return scope.equals(ScopeType.SINGLETON);
