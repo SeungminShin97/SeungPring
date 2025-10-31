@@ -1,35 +1,28 @@
 package org.example.framework.core;
 
-import org.example.framework.core.ComponentScanner;
-
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
-public class ComponentScannerTest {
+class ComponentScannerTest {
 
+    @Test
+    void scan_shouldFindAnnotatedComponents() throws Exception {
+        // given
+        ComponentScanner scanner = new ComponentScanner(
+            "org.example.app",
+            "org.example.framework",
+            "org.example.test"
+        );
 
-    /**
-     * ComponentScanner가 지정된 패키지에서 .class 파일을 찾고
-     * Component 어노테이션이 붙은 클래스들을 필터링 하는지 확인
-     *  실제 컴파일 된 클래스 파일을 기반으로 작동
-     */
-    public static void main(String[] args) {
+        // when
+        Set<Class<?>> components = scanner.scan();
 
-        try {
-            ComponentScanner componentScanner = new ComponentScanner();
-
-            Set<Class<?>> componentList = componentScanner.scan();
-            if(componentList.isEmpty())
-                System.out.println("Component가 비었습니다.");
-            else {
-                System.out.println("Component 출력");
-                componentList.forEach(System.out::println);
-            }
-        } catch (Exception e) {
-            System.out.println("Component scan 실패" + e.getMessage());
-        }
-
+        // then
+        assertFalse(components.isEmpty(), "컴포넌트가 비어 있으면 안 됨");
+        assertTrue(
+            components.stream().anyMatch(c -> c.getSimpleName().equals("DummyComponent")),
+            "@Component 클래스(DummyComponent)가 포함되어야 함"
+        );
     }
-
-
-
 }
