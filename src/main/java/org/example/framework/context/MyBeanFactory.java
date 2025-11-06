@@ -144,7 +144,7 @@ public class MyBeanFactory implements BeanFactory {
      * @throws NoSuchBeanDefinitionException Bean 정의가 존재하지 않을 경우
      */
     @Override
-    public boolean isTypeMath(String name, Class<?> typeToMatch) {
+    public boolean isTypeMatch(String name, Class<?> typeToMatch) {
         BeanDefinition beanDefinition = getBeanDefinitionOrThrow(name);
         return typeToMatch.isAssignableFrom(beanDefinition.getBeanClass());
     }

@@ -70,5 +70,5 @@ public interface BeanFactory {
      * @param typeToMatch 비교할 타입
      * @return 타입이 일치하거나 호환되면 true, 아니면 false
      */
-    boolean isTypeMath(String name, Class<?> typeToMatch);
+    boolean isTypeMatch(String name, Class<?> typeToMatch);
 }
