@@ -6,6 +6,10 @@ import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 
 import java.util.*;
 
+/**
+ * {@link BeanDefinitionRegistry}의 기본 구현체.
+ * <p>내부적으로 {@link HashMap}을 사용해 Bean 이름과 {@link BeanDefinition}을 관리한다.</p>
+ */
 public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
 
     private final Map<String, BeanDefinition> beanDefinitions;
@@ -13,6 +17,7 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
     MyBeanDefinitionRegistry() {
         beanDefinitions = new HashMap<>();
     }
+
 
     @Override
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
@@ -46,5 +51,10 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
     @Override
     public boolean containsBeanDefinition(String beanName) {
         return beanDefinitions.containsKey(beanName);
+    }
+
+    @Override
+    public Collection<BeanDefinition> getBeanDefinitions() {
+        return beanDefinitions.values();
     }
 }
