@@ -1,15 +1,16 @@
 package org.example.framework.core;
 
+import org.example.framework.context.MyComponentScanner;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
-class ComponentScannerTest {
+class MyComponentScannerTest {
 
     @Test
     void scan_shouldFindAnnotatedComponents() throws Exception {
         // given
-        ComponentScanner scanner = new ComponentScanner(
+        MyComponentScanner scanner = new MyComponentScanner(
             "org.example.app",
             "org.example.framework",
             "org.example.test"

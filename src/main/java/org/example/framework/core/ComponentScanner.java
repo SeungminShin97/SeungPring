@@ -1,65 +1,22 @@
 package org.example.framework.core;
 
-import org.example.framework.annotation.Component;
+import org.example.framework.context.BeanDefinition;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 /**
- * 지정된 패키지 경로에서 @Component 어노테이션이 붙은 클래스를 탐색하는 유틸리티
- * TODO: @ComponentScan(basePackage={"org.example.app"}) 방식의 어노테이션 기반으로 바꾸기
+ * {@code ComponentScanner}는 지정된 패키지나 클래스 경로를 스캔하여
+ * Bean으로 등록할 대상 클래스를 탐색하는 역할을 한다.
+ * <p>주로 {@code @Component}, {@code @Service}, {@code @Repository} 등의
+ * 어노테이션이 붙은 클래스를 검색해 {@link BeanDefinition}으로 등록하기 위한
+ * 초기 단계에서 사용된다.</p>
  */
-public class ComponentScanner {
-
-    private final List<String> basePackages;
+public interface ComponentScanner {
 
     /**
-     * 스캔할 패키지 목록을 생성자에서 주입받는다.
-     * ex) new ComponentScanner("org.example.app", "org.example.framework.web")
+     * 구성 요소(컴포넌트) 클래스를 스캔하여 반환한다.
+     *
+     * @return 스캔된 클래스의 집합
      */
-    public ComponentScanner(String... packages) {
-        this.basePackages = List.of(packages);
-    }
-
-    /**
-     * 지정된 모든 패키지를 순회하며 @Component 클래스들을 수집
-     */
-    public Set<Class<?>> scan() throws URISyntaxException, ClassNotFoundException {
-        Set<Class<?>> componentSet = new HashSet<>();
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-        for (String basePackage : basePackages) {
-            String path = basePackage.replace('.', '/');
-            URL url = classLoader.getResource(path);
-            if (url == null) continue;
-
-            File dir = new File(url.toURI());
-            collectClasses(dir, basePackage, componentSet, classLoader);
-        }
-        return componentSet;
-    }
-
-    /**
-     * 디렉터리 내 .class 파일을 재귀적으로 탐색하고, @Component 클래스만 등록
-     */
-    private void collectClasses(File dir, String packageName, Set<Class<?>> components, ClassLoader loader)
-            throws ClassNotFoundException {
-        if (!dir.exists()) return;
-        for (File file : Objects.requireNonNull(dir.listFiles())) {
-            if (file.isDirectory()) {
-                collectClasses(file, packageName + "." + file.getName(), components, loader);
-            } else if (file.getName().endsWith(".class")) {
-                String className = packageName + "." + file.getName().replace(".class", "");
-                Class<?> clazz = loader.loadClass(className);
-                if (clazz.isAnnotationPresent(Component.class)) {
-                    components.add(clazz);
-                }
-            }
-        }
-    }
+    Set<Class<?>> scan();
 }
