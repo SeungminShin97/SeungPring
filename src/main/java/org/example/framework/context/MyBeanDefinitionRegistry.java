@@ -1,7 +1,8 @@
 package org.example.framework.context;
 
 import org.example.framework.core.BeanDefinitionRegistry;
-import org.example.framework.exception.BeanException;
+import org.example.framework.exception.bean.BeanException;
+import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 
 import java.util.*;
 
@@ -28,7 +29,7 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
         Objects.requireNonNull(beanName, "BeanName is null");
         BeanDefinition beanDefinition = beanDefinitions.get(beanName);
         if (beanDefinition == null)
-            throw new BeanException(BeanException.BeanExceptionCode.BEANDEFINITION_NOT_FOUND);
+            throw new NoSuchBeanDefinitionException(beanName);
         return beanDefinition;
     }
 

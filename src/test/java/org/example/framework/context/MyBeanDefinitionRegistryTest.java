@@ -1,6 +1,6 @@
 package org.example.framework.context;
 
-import org.example.framework.exception.BeanException;
+import org.example.framework.exception.bean.BeanException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
