@@ -28,5 +28,5 @@ public interface BeanFactory {
     /**
      * Check whether the bean with the given name matches the specified type.
      */
-    boolean isTypeMath(String name, Class<?> TypeToMatch);
+    boolean isTypeMath(String name, Class<?> typeToMatch);
 }
