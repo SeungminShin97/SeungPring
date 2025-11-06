@@ -2,6 +2,7 @@ package org.example.framework.context;
 
 import org.example.framework.annotation.Component;
 import org.example.framework.core.ComponentScanner;
+import org.example.framework.exception.ComponentScanException;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -34,9 +35,11 @@ public class MyComponentScanner implements ComponentScanner {
     public Set<Class<?>> scan() {
         Set<Class<?>> componentSet = new HashSet<>();
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        String currentPackage = "";
 
         try {
             for (String basePackage : basePackages) {
+                currentPackage = basePackage;
                 String path = basePackage.replace('.', '/');
                 URL url = classLoader.getResource(path);
                 if (url == null) continue;
@@ -44,8 +47,8 @@ public class MyComponentScanner implements ComponentScanner {
                 File dir = new File(url.toURI());
                 collectClasses(dir, basePackage, componentSet, classLoader);
             }
-        } catch (URISyntaxException | ClassNotFoundException e) {
-            throw new RuntimeException("Component scan failed", e);
+        } catch (Exception e) {
+            throw new ComponentScanException(currentPackage, e);
         }
 
         return componentSet;
