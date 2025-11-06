@@ -1,9 +1,9 @@
 package org.example.framework.context;
 
 public class BeanDefinition {
-    private Class<?> beanClass;
-    private ScopeType scope;
-    private String beanName;
+    private final Class<?> beanClass;
+    private final ScopeType scope;
+    private final String beanName;
 
     public BeanDefinition(Class<?> clazz, String beanName, ScopeType scopeType) {
         this.beanClass = clazz;
