@@ -1,4 +1,4 @@
-package org.example.framework.core;
+package org.example.framework.context;
 
 import org.example.framework.context.MyComponentScanner;
 import org.junit.jupiter.api.Test;
