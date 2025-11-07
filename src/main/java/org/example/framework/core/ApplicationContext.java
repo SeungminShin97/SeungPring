@@ -44,4 +44,20 @@ public interface ApplicationContext {
      * @return 컨텍스트 시작 시각 (epoch millisecond)
      */
     long getStartupDate();
+
+    /**
+     * 지정된 이름의 Bean을 {@link BeanFactory}에서 반환한다.
+     * @param requiredType 찾을 Bean 타입
+     * @param <T>          반환 타입
+     * @return Bean 인스턴스
+     */
+    <T> T getBean(Class<T> requiredType);
+
+    /**
+     * 지정된 이름의 Bean을 {@link BeanFactory}에서 반환한다.
+     *
+     * @param beanName Bean 이름
+     * @return Bean 인스턴스
+     */
+    Object getBean(String beanName);
 }
