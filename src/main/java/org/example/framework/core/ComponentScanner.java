@@ -18,5 +18,5 @@ public interface ComponentScanner {
      *
      * @return 스캔된 클래스의 집합
      */
-    Set<Class<?>> scan();
+    Set<Class<?>> scan(String... basePackages);
 }

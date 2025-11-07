@@ -18,21 +18,13 @@ import java.util.Set;
  */
 public class MyComponentScanner implements ComponentScanner {
 
-    private final List<String> basePackages;
 
-    /**
-     * 스캔할 패키지 목록을 생성자에서 주입받는다.
-     * ex) new ComponentScanner("org.example.app", "org.example.framework.web")
-     */
-    public MyComponentScanner(String... packages) {
-        this.basePackages = List.of(packages);
-    }
 
     /**
      * 지정된 모든 패키지를 순회하며 @Component 클래스들을 수집
      */
     @Override
-    public Set<Class<?>> scan() {
+    public Set<Class<?>> scan(String... basePackages) {
         Set<Class<?>> componentSet = new HashSet<>();
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         String currentPackage = "";

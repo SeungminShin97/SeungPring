@@ -10,14 +10,14 @@ class MyComponentScannerTest {
     @Test
     void scan_shouldFindAnnotatedComponents() throws Exception {
         // given
-        MyComponentScanner scanner = new MyComponentScanner(
+        MyComponentScanner scanner = new MyComponentScanner();
+
+        // when
+        Set<Class<?>> components = scanner.scan(
             "org.example.app",
             "org.example.framework",
             "org.example.test"
         );
-
-        // when
-        Set<Class<?>> components = scanner.scan();
 
         // then
         assertFalse(components.isEmpty(), "컴포넌트가 비어 있으면 안 됨");
