@@ -142,6 +142,15 @@ public class MyApplicationContext extends AbstractApplicationContext {
     }
 
     /**
+     * 해당 이름의 bean 인스턴스가 생성됐는지 확인한다.
+     * @param beanName 조회할 bean 이름
+     * @return 존재하면 true, 아니면 false
+     */
+    boolean containsSingleton(String beanName) {
+        return factory.containsSingleton(beanName);
+    }
+
+    /**
      * {@inheritDoc}
      * <p>컴포넌트 스캔과 BeanDefinition 등록을 수행한다.
      * BeanFactory 초기화나 Bean 생성을 추가하려면 이 메서드를 확장하면 된다.</p>
