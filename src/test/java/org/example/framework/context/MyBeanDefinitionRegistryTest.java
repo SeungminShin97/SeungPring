@@ -1,5 +1,6 @@
 package org.example.framework.context;
 
+import org.example.framework.annotation.Autowired;
 import org.example.framework.exception.bean.BeanException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,12 +13,13 @@ class MyBeanDefinitionRegistryTest {
 
     private MyBeanDefinitionRegistry registry;
 
+    private static class DummyService {}
+
+
     @BeforeEach
     void setUp() {
         registry = new MyBeanDefinitionRegistry();
     }
-
-    static class dummyClass{}
 
     private BeanDefinition createDummyBeanDefinition(String name, Class<?> clazz) {
         return new BeanDefinition(clazz, name, ScopeType.SINGLETON);
@@ -26,7 +28,7 @@ class MyBeanDefinitionRegistryTest {
     @Test
     void registerBeanDefinition_singleBean_shouldStore() {
         //Given
-        BeanDefinition bean = createDummyBeanDefinition("test",dummyClass.class);
+        BeanDefinition bean = createDummyBeanDefinition("test", DummyService.class);
 
         //When
         registry.registerBeanDefinition("test", bean);
@@ -40,8 +42,8 @@ class MyBeanDefinitionRegistryTest {
     @Test
     void registerBeanDefinition_multipleBeans_shouldStoreAll() {
         //Given
-        BeanDefinition bean1 = createDummyBeanDefinition("test1", dummyClass.class);
-        BeanDefinition bean2 = createDummyBeanDefinition("test2", dummyClass.class);
+        BeanDefinition bean1 = createDummyBeanDefinition("test1", DummyService.class);
+        BeanDefinition bean2 = createDummyBeanDefinition("test2", DummyService.class);
 
         //When
         registry.registerBeanDefinition(("test1"), bean1);
@@ -58,8 +60,8 @@ class MyBeanDefinitionRegistryTest {
     @Test
     void registerBeanDefinition_duplicatedBeanName_shouldStoreFirstOne() {
         //Given
-        BeanDefinition bean1 = createDummyBeanDefinition("test", dummyClass.class);
-        BeanDefinition bean2 = createDummyBeanDefinition("test", dummyClass.class);
+        BeanDefinition bean1 = createDummyBeanDefinition("test", DummyService.class);
+        BeanDefinition bean2 = createDummyBeanDefinition("test", DummyService.class);
 
         //When
         registry.registerBeanDefinition(("test"), bean1);
@@ -74,7 +76,7 @@ class MyBeanDefinitionRegistryTest {
     @Test
     void registerBeanDefinition_nullBeanName_shouldThrowException() {
         //Given
-        BeanDefinition bean = createDummyBeanDefinition("test1", dummyClass.class);
+        BeanDefinition bean = createDummyBeanDefinition("test1", DummyService.class);
 
         //When & Then
         assertThrows(NullPointerException.class, () -> registry.registerBeanDefinition(null, bean));
@@ -94,7 +96,7 @@ class MyBeanDefinitionRegistryTest {
     @Test
     void getBeanDefinition_validBeanName_shouldReturnBeanDefinition() {
         // Given
-        BeanDefinition bean = createDummyBeanDefinition("test",dummyClass.class);
+        BeanDefinition bean = createDummyBeanDefinition("test",DummyService.class);
 
         //When
         registry.registerBeanDefinition("test", bean);
@@ -136,8 +138,8 @@ class MyBeanDefinitionRegistryTest {
     @Test
     void getBeanDefinitionCount_multipleBeans_shouldReturnCorrectCount() {
         // Given
-        BeanDefinition bean1 = createDummyBeanDefinition("test1", dummyClass.class);
-        BeanDefinition bean2 = createDummyBeanDefinition("test2", dummyClass.class);
+        BeanDefinition bean1 = createDummyBeanDefinition("test1", DummyService.class);
+        BeanDefinition bean2 = createDummyBeanDefinition("test2", DummyService.class);
 
         // When
         registry.registerBeanDefinition("test1", bean1);
@@ -161,7 +163,7 @@ class MyBeanDefinitionRegistryTest {
     @Test
     void containsBeanDefinition_singleBean_shouldReturnTrue() {
         // Given
-        BeanDefinition bean = createDummyBeanDefinition("test", dummyClass.class);
+        BeanDefinition bean = createDummyBeanDefinition("test", DummyService.class);
 
         // When
         registry.registerBeanDefinition("test", bean);
