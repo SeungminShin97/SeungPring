@@ -1,7 +1,7 @@
 package org.example.framework.context;
 
-import org.example.framework.annotation.Autowired;
 import org.example.framework.exception.bean.BeanException;
+import org.example.test.DummyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,9 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class MyBeanDefinitionRegistryTest {
 
     private MyBeanDefinitionRegistry registry;
-
-    private static class DummyService {}
-
 
     @BeforeEach
     void setUp() {

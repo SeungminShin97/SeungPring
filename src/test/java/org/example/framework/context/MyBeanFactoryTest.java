@@ -1,9 +1,11 @@
 package org.example.framework.context;
 
-import org.example.framework.annotation.Autowired;
 import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
+import org.example.test.DummyChildService;
+import org.example.test.DummyController;
+import org.example.test.DummyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,13 +20,6 @@ class MyBeanFactoryTest {
 
     private final String DUMMY_CONTROLLER = "dummyController";
     private final String DUMMY_SERVICE = "dummyService";
-
-    private static class DummyService {}
-    private static class DummyController {
-        @Autowired
-        DummyService dummyService;
-    }
-    private static class DummyChildService extends DummyService {}
 
     private BeanFactory factory;
     private BeanDefinitionRegistry registry;

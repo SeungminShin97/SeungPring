@@ -20,8 +20,8 @@ class MyComponentScannerTest {
         // then
         assertFalse(components.isEmpty(), "컴포넌트가 비어 있으면 안 됨");
         assertTrue(
-            components.stream().anyMatch(c -> c.getSimpleName().equals("DummyComponent")),
-            "@Component 클래스(DummyComponent)가 포함되어야 함"
+            components.stream().anyMatch(c -> c.getSimpleName().equals("DummyController")),
+            "@Component 클래스(DummyController)가 포함되어야 함"
         );
     }
 }
