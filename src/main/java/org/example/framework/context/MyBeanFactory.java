@@ -34,6 +34,14 @@ public class MyBeanFactory implements BeanFactory {
         return containsSingleton(name) || registry.containsBeanDefinition(name);
     }
 
+    /**
+     * {@code singletonObjects} 안에 해당 Bean이 존재하는지 검사
+     */
+    @Override
+    public boolean containsSingleton(String name) {
+        return singletonObjects.containsKey(name);
+    }
+
 
     @Override
     public String[] getAliases(String name) {
@@ -148,13 +156,6 @@ public class MyBeanFactory implements BeanFactory {
     public boolean isTypeMatch(String name, Class<?> typeToMatch) {
         BeanDefinition beanDefinition = getBeanDefinitionOrThrow(name);
         return typeToMatch.isAssignableFrom(beanDefinition.getBeanClass());
-    }
-
-    /**
-     * {@code singletonObjects} 안에 해당 Bean이 존재하는지 검사
-     */
-    private boolean containsSingleton(String name) {
-        return singletonObjects.containsKey(name);
     }
 
     /**

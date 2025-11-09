@@ -15,6 +15,13 @@ public interface BeanFactory {
     boolean containsBean(String name);
 
     /**
+     * 지정된 이름의 Bean의 싱글톤 인스턴스가 존재하는지 확인한다.
+     * @param name Bean 이름
+     * @return 존재하면 true, 아니면 false
+     */
+    boolean containsSingleton(String name);
+
+    /**
      * 지정된 Bean 이름과 연결된 모든 별칭(alias)을 반환한다.
      *
      * @param name Bean 이름
