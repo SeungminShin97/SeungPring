@@ -14,8 +14,6 @@ class MyComponentScannerTest {
 
         // when
         Set<Class<?>> components = scanner.scan(
-            "org.example.app",
-            "org.example.framework",
             "org.example.test"
         );
 

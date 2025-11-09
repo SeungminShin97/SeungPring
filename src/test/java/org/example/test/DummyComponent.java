@@ -1,4 +1,4 @@
-package org.example.test.componentScan;
+package org.example.test;
 
 import org.example.framework.annotation.Component;
 
