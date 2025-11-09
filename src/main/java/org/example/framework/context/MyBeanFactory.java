@@ -6,6 +6,7 @@ import org.example.framework.core.DependencyInjector;
 import org.example.framework.exception.bean.BeanCreationException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -182,7 +183,15 @@ public class MyBeanFactory implements BeanFactory {
     private Object createBean(BeanDefinition def) {
         try {
             Class<?> clazz = def.getBeanClass();
-            Object instance = clazz.getDeclaredConstructor().newInstance();
+
+            /**
+             * TODO: 생성자 주입 기능
+             * 현재 기본 생성자를 가진 클래스만 생성 가능 <br>
+             * 나중에 생성자 선택 + 주입 기능 추가해야 됨
+             */
+            Constructor<?> ctor = clazz.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            Object instance = ctor.newInstance();
 
             // 의존성 주입
             injector.inject(instance, this);
