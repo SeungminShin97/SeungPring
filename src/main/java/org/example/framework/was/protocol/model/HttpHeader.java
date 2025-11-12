@@ -32,12 +32,15 @@ public class HttpHeader {
 
     /**
      * 지정한 헤더 이름에 해당하는 모든 값을 반환한다.
+     * <p>반환 시 새로운 {@link ArrayList}로 복사하여 반환합니다.</p>
      *
      * @param key 헤더 이름
-     * @return 헤더 값 목록, 없으면 {@code null}
+     * @return 헤더 값 목록의 복사본, 없으면 {@code Collections.emptyList()} 반환
      */
     public List<String> get(String key) {
-        return headers.get(key);
+        List<String> list = headers.get(key);
+        // 원본 리스트가 null이면 빈 리스트 반환, 아니면 새로운 리스트로 복사하여 반환
+        return (list == null) ? Collections.emptyList() : new ArrayList<>(list);
     }
 
 
@@ -55,12 +58,17 @@ public class HttpHeader {
     /**
      * 전체 헤더 맵을 읽기 전용 형태로 반환한다.
      * <p>
-     * 반환된 맵은 원본 데이터를 복사하지 않으며,
-     * 수정 시 {@link UnsupportedOperationException}이 발생한다.
+     * 반환된 맵은 원본 데이터를 깊은 복사(Deep Copy)한 후
+     * 읽기 전용으로 감싸서 반환한다.
      *
-     * @return 읽기 전용 헤더 맵
+     * @return 읽기 전용 헤더 맵의 깊은 복사본
      */
     public Map<String, List<String>> getAll() {
-        return Collections.unmodifiableMap(headers);
+        Map<String, List<String>> deepCopiedMap = new HashMap<>();
+
+        for (Map.Entry<String, List<String>> entry : headers.entrySet())
+            deepCopiedMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+
+        return Collections.unmodifiableMap(deepCopiedMap);
     }
 }

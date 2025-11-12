@@ -2,6 +2,7 @@ package org.example.framework.was.protocol.model;
 
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Arrays;
 
 /**
  * HTTP 요청/응답의 바디 데이터를 저장합니다.
@@ -12,7 +13,9 @@ public class HttpBody {
     private final byte[] data;
 
     public HttpBody(byte[] data) {
-        this.data = data;
+        // 방어적 복사(defensive copy)를 통해 외부에서 전달받은 배열이 변경되어도
+        // 이 HttpBody 인스턴스는 안전하게 유지되도록 합니다.
+        this.data = Arrays.copyOf(data, data.length);
     }
 
 
@@ -45,7 +48,19 @@ public class HttpBody {
         return data.length;
     }
 
+    /**
+     * 바디가 비어있는지 확인합니다. (테스트에서 필요했던 메소드 추가)
+     * @return 바디가 비어있으면 true, 아니면 false
+     */
     public byte[] getData() {
-        return this.data;
+        return Arrays.copyOf(this.data, this.data.length);
+    }
+
+    /**
+     * 바디가 비어있는지 확인합니다. (테스트에서 필요했던 메소드 추가)
+     * @return 바디가 비어있으면 true, 아니면 false
+     */
+    public boolean isEmpty() {
+        return this.data.length == 0;
     }
 }
