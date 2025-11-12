@@ -15,43 +15,50 @@ public class HttpHeader {
     private final Map<String, List<String>> headers = new HashMap<>();
 
     /**
-     * 헤더를 추가한다. 동일한 키가 이미 존재할 경우 값이 누적된다.
-     * 쉼표(,)로 구분된 다중 값은 개별 항목으로 분리하여 저장한다.
+     * HTTP 헤더 필드를 추가합니다.
+     * <p>
+     * 키(key)는 대소문자를 구분하지 않도록 소문자로 정규화하여 저장합니다.
+     * 값(value)은 대소문자를 유지하며 앞뒤 공백만 제거하여 저장합니다.
+     * 쉼표(,)로 구분된 여러 값이라도 분리하지 않고 전체 문자열로 저장합니다.
+     * </p>
      *
-     * @param key   헤더 이름
-     * @param value 헤더 값 (쉼표로 구분된 문자열 가능)
+     * @param key   헤더 필드 이름 (예: "Content-Type")
+     * @param value 헤더 필드 값 (예: "text/plain, charset=UTF-8")
      */
     public void put(String key, String value) {
-        List<String> list = headers.computeIfAbsent(key, k -> new ArrayList<>());
+        String normalizedKey = key.toLowerCase().trim();
+        String trimmedValue = value.trim();
 
-        for (String v : value.split(",")) {
-            list.add(v.trim());
-        }
+        List<String> list = headers.computeIfAbsent(normalizedKey, k -> new ArrayList<>());
+        list.add(trimmedValue);
     }
 
 
     /**
      * 지정한 헤더 이름에 해당하는 모든 값을 반환한다.
+     * <p>조회 시 키의 대소문자를 구분하지 않습니다.</p>
      * <p>반환 시 새로운 {@link ArrayList}로 복사하여 반환합니다.</p>
      *
      * @param key 헤더 이름
      * @return 헤더 값 목록의 복사본, 없으면 {@code Collections.emptyList()} 반환
      */
     public List<String> get(String key) {
-        List<String> list = headers.get(key);
-        // 원본 리스트가 null이면 빈 리스트 반환, 아니면 새로운 리스트로 복사하여 반환
+        List<String> list = headers.get(key.toLowerCase().trim());
+
         return (list == null) ? Collections.emptyList() : new ArrayList<>(list);
     }
 
 
     /**
      * 지정한 헤더 이름에 해당하는 첫 번째 값을 반환한다.
+     * <p>조회 시 키의 대소문자를 구분하지 않습니다.</p>
      *
      * @param key 헤더 이름
      * @return 첫 번째 값, 없으면 {@code null}
      */
     public String getFirst(String key) {
-        List<String> list = headers.get(key);
+        List<String> list = headers.get(key.toLowerCase().trim());
+
         return (list == null || list.isEmpty()) ? null : list.getFirst();
     }
 
