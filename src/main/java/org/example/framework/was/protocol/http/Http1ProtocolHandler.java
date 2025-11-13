@@ -10,6 +10,6 @@ public class Http1ProtocolHandler implements HttpProtocolHandler {
 
     @Override
     public HttpResponse process(HttpRequest request) {
-        throw new TODOException(TODOCode.TODO_PROTOCOL_HANDLER);
+        throw new TODOException(TODOCode.SUB_PROTOCOL_HANDLER);
     }
 }

@@ -1,6 +1,10 @@
 package org.example.framework.exception.todo;
 
 public enum TODOCode {
-    TODO_PROTOCOL_HANDLER,
-    TODO_HTTP2;
+    // 대분류
+    MAIN_HTTP2,
+
+    // 소분류
+    SUB_PROTOCOL_HANDLER,
+    SUB_REQUEST_PARSER;
 }
