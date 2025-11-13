@@ -1,8 +1,6 @@
 package org.example.framework.was.protocol;
 
 import org.example.framework.exception.was.HttpParsingException;
-import org.example.framework.was.protocol.core.RequestParser;
-import org.example.framework.was.protocol.http.Http1RequestParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +44,7 @@ class HttpProtocolSelectorTest {
     }
 
     @Test
-    @DisplayName("[HTTP/1.1] 표준 GET 요청 시 Http1RequestParser를 반환해야 한다.")
+    @DisplayName("[HTTP/1.1] 표준 GET 요청 시 HttpProtocolVersion.HTTP_1_1을 반환해야 한다.")
     void should_return_http1RequestParser_for_standard_get_request() throws IOException, HttpParsingException {
         // Given
         String rawRequest = "GET /health HTTP/1.1\r\n" +
@@ -56,14 +54,14 @@ class HttpProtocolSelectorTest {
         InputStream bufferedIn = new BufferedInputStream(inputStream, 24);
 
         // When
-        RequestParser actualParser = selector.detect(bufferedIn);
+        HttpProtocolVersion version = selector.detect(bufferedIn);
 
         // Then
-        assertInstanceOf(Http1RequestParser.class, actualParser);
+        assertEquals(HttpProtocolVersion.HTTP_1_1, version);
     }
 
     @Test
-    @DisplayName("[HTTP/1.1] 표준 POST 요청 시 Http1RequestParser를 반환해야 한다.")
+    @DisplayName("[HTTP/1.1] 표준 POST 요청 시 HttpProtocolVersion.HTTP_1_1을 반환해야 한다.")
     void should_return_http1RequestParser_for_standard_post_request() throws IOException, HttpParsingException {
         // Given
         String rawRequest = "POST /health HTTP/1.1\r\n" +
@@ -73,23 +71,26 @@ class HttpProtocolSelectorTest {
         InputStream bufferedIn = new BufferedInputStream(inputStream, 24);
 
         // When
-        RequestParser actualParser = selector.detect(bufferedIn);
+        HttpProtocolVersion version = selector.detect(bufferedIn);
 
         // Then
-        assertInstanceOf(Http1RequestParser.class, actualParser);
+        assertEquals(HttpProtocolVersion.HTTP_1_1, version);
     }
 
     @Test
-    @DisplayName("[HTTP/2.0] HTTP/2 감지 시 UnsupportedEncodingException를 던져야 한다.")
-    void should_throw_when_detect_http2_is_detected() {
+    @DisplayName("[HTTP/2.0] HTTP/2 감지 시 HttpProtocolVersion.HTTP_2_0을 반환해야 한다.")
+    void should_throw_when_detect_http2_is_detected() throws IOException, HttpParsingException {
         // Given
         String rawRequest = "PRI * HTTP/2.0\\r\\n\\r\\nSM\\r\\n\\r\\n" +
                 "\r\n\r\n";
         InputStream inputStream = new ByteArrayInputStream(rawRequest.getBytes(StandardCharsets.US_ASCII));
         InputStream bufferedIn = new BufferedInputStream(inputStream, 24);
 
-        // When & Then
-        assertThrows(UnsupportedEncodingException.class, () -> selector.detect(bufferedIn));
+        // When
+        HttpProtocolVersion version = selector.detect(bufferedIn);
+
+        // Then
+        assertEquals(HttpProtocolVersion.HTTP_2_0, version);
     }
 
     @Test

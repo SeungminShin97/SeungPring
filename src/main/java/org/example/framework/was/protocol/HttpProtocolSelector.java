@@ -25,31 +25,30 @@ import java.util.Arrays;
 public class HttpProtocolSelector {
 
     /**
-     * 입력 스트림의 시작 부분을 분석하여 적절한 RequestParser를 선택합니다.
+     * 입력 스트림의 시작 부분을 분석하여 적절한 프로토콜 버전을 감지합니다.
      * <p>
-     * HTTP/1.1인 경우 {@link Http1RequestParser}를 반환하며,
-     * HTTP/2.0 프리페이스가 감지되면 현재 지원하지 않는다는 예외를 던집니다.
+     * HTTP/1.1 프리페이스가 감지되면 {@link HttpProtocolVersion#HTTP_1_1}을 반환하며,
+     * HTTP/2.0 프리페이스가 감지되면 {@link HttpProtocolVersion#HTTP_2_0}을 반환합니다.
      * 감지 후 스트림은 자동으로 reset됩니다.
      * * @param inputStream 클라이언트 연결로부터 받은 입력 스트림 (반드시 mark/reset을 지원해야 함)
-     * @return 감지된 프로토콜에 맞는 RequestParser 인스턴스
+     * @return 감지된 HTTP 프로토콜 버전 Enum
      * @throws IOException 스트림 처리 중 I/O 오류가 발생할 경우
      * @throws HttpParsingException 유효한 HTTP 프로토콜(1.1 또는 2.0 프리페이스)로 시작하지 않는 경우
-     * @throws UnsupportedEncodingException HTTP/2.0 요청이 들어왔으나 현재 WAS가 이를 처리하지 못할 경우
      */
-    public RequestParser detect(InputStream inputStream) throws IOException, HttpParsingException {
+    public HttpProtocolVersion detect(InputStream inputStream) throws IOException, HttpParsingException {
         inputStream.mark(24);
         byte[] preface = inputStream.readNBytes(24);
         String text = new String(preface);
         inputStream.reset();
 
-        // TODO: HTTP/2.0 추가
+
         if(text.startsWith("PRI * HTTP/2.0"))
-            throw new UnsupportedEncodingException("HTTP2.0 not supported");
+            return HttpProtocolVersion.HTTP_2_0;
 
         boolean isHttp1 = Arrays.stream(HttpMethod.values())
                 .anyMatch(method -> text.startsWith(method.name() + " "));
         if(isHttp1)
-            return new Http1RequestParser();
+            return HttpProtocolVersion.HTTP_1_1;
 
         throw new HttpParsingException("Unknown or unsupported protocol. " +
                 "Not HTTP/1.1 or HTTP/2.0. Preface: " + text);
