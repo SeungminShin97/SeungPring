@@ -2,12 +2,11 @@ package org.example.framework.was.protocol;
 
 import org.example.framework.exception.was.HttpParsingException;
 import org.example.framework.was.protocol.core.RequestParser;
-import org.example.framework.was.protocol.http.Http1RequestParser;
+import org.example.framework.was.protocol.http.http1.Http1RequestParser;
 import org.example.framework.was.protocol.model.HttpMethod;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 /**
@@ -20,7 +19,7 @@ import java.util.Arrays;
  * 반환된 {@link RequestParser}가 스트림을 처음부터 읽을 수 있도록 준비합니다.
  *
  * @see org.example.framework.was.protocol.core.RequestParser
- * @see org.example.framework.was.protocol.http.Http1RequestParser
+ * @see Http1RequestParser
  */
 public class HttpProtocolSelector {
 

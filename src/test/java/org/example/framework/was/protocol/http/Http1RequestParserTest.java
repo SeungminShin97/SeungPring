@@ -1,6 +1,7 @@
 package org.example.framework.was.protocol.http;
 
 import org.example.framework.exception.was.HttpParsingException;
+import org.example.framework.was.protocol.http.http1.Http1RequestParser;
 import org.example.framework.was.protocol.model.HttpHeader;
 import org.example.framework.was.protocol.model.HttpMethod;
 import org.example.framework.was.protocol.model.HttpRequest;

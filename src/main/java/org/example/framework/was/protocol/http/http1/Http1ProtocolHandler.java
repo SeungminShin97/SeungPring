@@ -1,4 +1,4 @@
-package org.example.framework.was.protocol.http;
+package org.example.framework.was.protocol.http.http1;
 
 import org.example.framework.exception.todo.TODOCode;
 import org.example.framework.exception.todo.TODOException;

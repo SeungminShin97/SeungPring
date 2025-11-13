@@ -1,4 +1,4 @@
-package org.example.framework.was.protocol.http;
+package org.example.framework.was.protocol.http.http1;
 
 import org.example.framework.exception.was.HttpParsingException;
 import org.example.framework.was.protocol.core.RequestParser;
