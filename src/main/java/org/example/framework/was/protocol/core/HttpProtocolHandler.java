@@ -1,5 +1,7 @@
 package org.example.framework.was.protocol.core;
 
+import org.example.framework.exception.was.HttpParsingException;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -39,14 +41,23 @@ public abstract class HttpProtocolHandler {
     }
 
     /**
-     * 클라이언트로부터 받은 입력 스트림({@code InputStream})을 처리하고
-     * 응답({@code OutputStream})을 전송하는 추상 메서드입니다.
+     * 클라이언트 요청을 처리하고 응답을 전송하는 프로토콜별 핵심 처리 메서드입니다.
+     *
      * <p>
-     * 구체적인 프로토콜 구현체는 이 메서드 내에서 파싱, 로직 수행, 응답 작성을 관리해야 합니다.
+     * 이 메서드는 하나의 HTTP 연결 단위에서 수행되며,
+     * 구체적인 프로토콜 구현체가 다음 단계를 책임집니다:
+     * </p>
+     *
+     * <ul>
+     *   <li>요청 입력 스트림({@code InputStream})을 읽어 프로토콜 규격에 맞게 파싱</li>
+     *   <li>해당 요청에 대한 비즈니스/서버 로직 수행</li>
+     *   <li>응답 객체를 생성하고 출력 스트림({@code OutputStream})에 직렬화하여 전송</li>
+     * </ul>
+     *
      *
      * @param inputStream 클라이언트 요청 데이터 스트림
      * @param outputStream 클라이언트에게 응답을 보낼 스트림
-     * @throws Exception 처리 과정 중 파싱 오류, I/O 오류 또는 서버 로직 오류 발생 시
+     * @throws HttpParsingException 요청 파싱 과정에서 프로토콜 규격 위반 또는 형식 오류가 발생한 경우
      */
-    public abstract void process(InputStream inputStream, OutputStream outputStream) throws Exception;
+    public abstract void process(InputStream inputStream, OutputStream outputStream) throws HttpParsingException;
 }
