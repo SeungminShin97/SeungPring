@@ -10,6 +10,7 @@ import java.nio.charset.UnsupportedCharsetException;
 import org.example.framework.was.protocol.model.*;
 
 /**
+ * 싱글톤 클래스입니다. {@link #getInstance()}를 통해 인스턴스를 획득할 수 있습니다.
  * HTTP/1.1 요청을 파싱하여 {@link HttpRequest} 객체로 변환합니다.
  * <p>
  * Request Line → Header → Body 순으로 파싱합니다.
