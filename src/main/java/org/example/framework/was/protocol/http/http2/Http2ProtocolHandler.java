@@ -11,8 +11,19 @@ import java.io.OutputStream;
 
 public class Http2ProtocolHandler extends HttpProtocolHandler {
 
-    public Http2ProtocolHandler(RequestParser requestParser, ResponseWriter responseWriter) {
+    private Http2ProtocolHandler(RequestParser requestParser, ResponseWriter responseWriter) {
         super(requestParser, responseWriter);
+    }
+
+    private static class Holder {
+        static final Http2ProtocolHandler INSTANCE = new Http2ProtocolHandler(
+                Http2RequestParser.getInstance(),
+                Http2ResponseWriter.getInstance()
+        );
+    }
+
+    public static Http2ProtocolHandler getInstance() {
+        return Holder.INSTANCE;
     }
 
     @Override
