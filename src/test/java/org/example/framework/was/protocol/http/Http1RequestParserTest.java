@@ -22,7 +22,7 @@ class Http1RequestParserTest {
 
     @BeforeEach
     void setUp() {
-        parser = new Http1RequestParser();
+        parser = Http1RequestParser.getInstance();
     }
 
     @Test

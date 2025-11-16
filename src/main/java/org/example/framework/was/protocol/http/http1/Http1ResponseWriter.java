@@ -10,6 +10,16 @@ import java.io.OutputStream;
 
 public class Http1ResponseWriter implements ResponseWriter {
 
+    private Http1ResponseWriter() {}
+
+    private static class Holder {
+        static Http1ResponseWriter INSTANCE = new Http1ResponseWriter();
+    }
+
+    public static Http1ResponseWriter getInstance() {
+        return Holder.INSTANCE;
+    }
+
     @Override
     public void write(OutputStream outputStream, HttpResponse response) throws IOException {
         throw new TODOException(TODOCode.MAIN_HTTP1, TODOCode.SUB_RESPONSE_WRITER);

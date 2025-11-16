@@ -25,6 +25,16 @@ import org.example.framework.was.protocol.model.*;
  */
 public class Http1RequestParser implements RequestParser {
 
+    private Http1RequestParser() {}
+
+    private static class Holder {
+        static final Http1RequestParser INSTANCE = new Http1RequestParser();
+    }
+
+    public static Http1RequestParser getInstance() {
+        return Holder.INSTANCE;
+    }
+
     @Override
     public HttpMessage parse(InputStream inputStream) throws HttpParsingException, UnsupportedCharsetException{
         DataInputStream dataInputStream = new DataInputStream(inputStream);
