@@ -1,5 +1,7 @@
 package org.example.framework.was.protocol.model;
 
+import org.example.framework.was.protocol.HttpProtocolVersion;
+
 import java.net.http.HttpResponse;
 
 /**
@@ -16,7 +18,7 @@ import java.net.http.HttpResponse;
 public class HttpMessage {
 
     /** HTTP 프로토콜 버전 (예: HTTP/1.1, HTTP/2.0) */
-    protected final String version;
+    protected final HttpProtocolVersion version;
 
     /** HTTP 헤더 */
     protected final HttpHeader header;
@@ -24,13 +26,13 @@ public class HttpMessage {
     /** HTTP 바디 */
     protected final HttpBody body;
 
-    protected HttpMessage(String version, HttpHeader header, HttpBody body) {
+    protected HttpMessage(HttpProtocolVersion version, HttpHeader header, HttpBody body) {
         this.version = version;
         this.header = header;
         this.body = body;
     }
 
-    public String getVersion() {
+    public HttpProtocolVersion getVersion() {
         return version;
     }
 

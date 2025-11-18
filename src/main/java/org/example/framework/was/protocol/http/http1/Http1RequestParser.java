@@ -1,6 +1,7 @@
 package org.example.framework.was.protocol.http.http1;
 
 import org.example.framework.exception.was.HttpParsingException;
+import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.core.RequestParser;
 
 import java.io.*;
@@ -61,7 +62,14 @@ public class Http1RequestParser implements RequestParser {
         if (transferEncoding != null && transferEncoding.contains("chunked"))
             throw new UnsupportedOperationException("Streaming body parsing not supported yet (Chunked encoding)");
 
-        return new HttpRequest(header, body, requestParam[2], HttpMethod.from(requestParam[0]), requestParam[1]);
+        HttpProtocolVersion version;
+        try {
+            version = HttpProtocolVersion.from(requestParam[2]);
+        } catch (IllegalArgumentException e) {
+            throw new HttpParsingException("Unsupported HTTP version: " + requestParam[2], e);
+        }
+
+        return new HttpRequest(header, body, version, HttpMethod.from(requestParam[0]), requestParam[1]);
     }
 
     /**

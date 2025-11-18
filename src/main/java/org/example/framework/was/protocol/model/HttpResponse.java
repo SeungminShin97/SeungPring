@@ -1,5 +1,7 @@
 package org.example.framework.was.protocol.model;
 
+import org.example.framework.was.protocol.HttpProtocolVersion;
+
 /**
  * HTTP 응답 정보를 표현하는 클래스.
  * <p>
@@ -18,7 +20,7 @@ public class HttpResponse extends HttpMessage{
     /** 상태 메세지 */
     private final String message;
 
-    public HttpResponse(HttpHeader header, HttpBody body, String version, int statusCode, String message) {
+    public HttpResponse(HttpHeader header, HttpBody body, HttpProtocolVersion version, int statusCode, String message) {
         super(version, header,body);
         this.statusCode = statusCode;
         this.message = message;

@@ -1,5 +1,7 @@
 package org.example.framework.was.protocol.model;
 
+import org.example.framework.was.protocol.HttpProtocolVersion;
+
 /**
  * HTTP 요청 정보를 표현하는 클래스.
  * <p>
@@ -18,7 +20,7 @@ public class HttpRequest extends HttpMessage{
     /** 요청 경로 (예: /api/posts) */
     private final String path;
 
-    public HttpRequest(HttpHeader header, HttpBody body, String version, HttpMethod method, String path) {
+    public HttpRequest(HttpHeader header, HttpBody body, HttpProtocolVersion version, HttpMethod method, String path) {
         super(version, header, body);
         this.method = method;
         this.path = path;

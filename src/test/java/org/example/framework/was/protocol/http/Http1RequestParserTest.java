@@ -1,6 +1,7 @@
 package org.example.framework.was.protocol.http;
 
 import org.example.framework.exception.was.HttpParsingException;
+import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.http.http1.Http1RequestParser;
 import org.example.framework.was.protocol.model.HttpHeader;
 import org.example.framework.was.protocol.model.HttpMethod;
@@ -43,7 +44,7 @@ class Http1RequestParserTest {
         assertNotNull(request);
         assertEquals(HttpMethod.GET, request.getMethod());
         assertEquals("/index.html", request.getPath());
-        assertEquals("HTTP/1.1", request.getVersion());
+        assertEquals(HttpProtocolVersion.HTTP_1_1, request.getVersion());
         assertEquals("localhost", request.getHeader().getFirst("Host"));
         assertTrue(request.getBody().isEmpty());
         assertSame(request.getBody().getContentLengthLong(), 0L);
