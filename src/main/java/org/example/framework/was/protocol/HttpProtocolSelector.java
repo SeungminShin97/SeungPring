@@ -1,6 +1,7 @@
 package org.example.framework.was.protocol;
 
 import org.example.framework.exception.was.HttpParsingException;
+import org.example.framework.exception.was.HttpVersionDetectionException;
 import org.example.framework.was.protocol.core.RequestParser;
 import org.example.framework.was.protocol.http.http1.Http1RequestParser;
 import org.example.framework.was.protocol.model.HttpMethod;
@@ -32,9 +33,9 @@ public class HttpProtocolSelector {
      * * @param inputStream 클라이언트 연결로부터 받은 입력 스트림 (반드시 mark/reset을 지원해야 함)
      * @return 감지된 HTTP 프로토콜 버전 Enum
      * @throws IOException 스트림 처리 중 I/O 오류가 발생할 경우
-     * @throws HttpParsingException 유효한 HTTP 프로토콜(1.1 또는 2.0 프리페이스)로 시작하지 않는 경우
+     * @throws HttpVersionDetectionException 유효한 HTTP 프로토콜(1.1 또는 2.0 프리페이스)로 시작하지 않는 경우
      */
-    public HttpProtocolVersion detect(InputStream inputStream) throws IOException, HttpParsingException {
+    public HttpProtocolVersion detect(InputStream inputStream) throws IOException, HttpVersionDetectionException {
         inputStream.mark(24);
         byte[] preface = inputStream.readNBytes(24);
         String text = new String(preface);
@@ -49,7 +50,7 @@ public class HttpProtocolSelector {
         if(isHttp1)
             return HttpProtocolVersion.HTTP_1_1;
 
-        throw new HttpParsingException("Unknown or unsupported protocol. " +
+        throw new HttpVersionDetectionException("Unknown or unsupported protocol. " +
                 "Not HTTP/1.1 or HTTP/2.0. Preface: " + text);
     }
 }

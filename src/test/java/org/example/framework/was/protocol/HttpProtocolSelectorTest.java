@@ -1,6 +1,7 @@
 package org.example.framework.was.protocol;
 
 import org.example.framework.exception.was.HttpParsingException;
+import org.example.framework.exception.was.HttpVersionDetectionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ class HttpProtocolSelectorTest {
         InputStream bufferedIn = new BufferedInputStream(inputStream, 24);
 
         // When & Then
-        assertThrows(HttpParsingException.class, () -> selector.detect(bufferedIn));
+        assertThrows(HttpVersionDetectionException.class, () -> selector.detect(bufferedIn));
     }
 
     @Test
@@ -40,12 +41,12 @@ class HttpProtocolSelectorTest {
         InputStream bufferedIn = new BufferedInputStream(inputStream, 24);
 
         // When & Then
-        assertThrows(HttpParsingException.class, () -> selector.detect(bufferedIn));
+        assertThrows(HttpVersionDetectionException.class, () -> selector.detect(bufferedIn));
     }
 
     @Test
     @DisplayName("[HTTP/1.1] 표준 GET 요청 시 HttpProtocolVersion.HTTP_1_1을 반환해야 한다.")
-    void should_return_http1RequestParser_for_standard_get_request() throws IOException, HttpParsingException {
+    void should_return_http1RequestParser_for_standard_get_request() throws IOException, HttpVersionDetectionException {
         // Given
         String rawRequest = "GET /health HTTP/1.1\r\n" +
                 "Host: localhost\r\n" +
@@ -62,7 +63,7 @@ class HttpProtocolSelectorTest {
 
     @Test
     @DisplayName("[HTTP/1.1] 표준 POST 요청 시 HttpProtocolVersion.HTTP_1_1을 반환해야 한다.")
-    void should_return_http1RequestParser_for_standard_post_request() throws IOException, HttpParsingException {
+    void should_return_http1RequestParser_for_standard_post_request() throws IOException, HttpVersionDetectionException {
         // Given
         String rawRequest = "POST /health HTTP/1.1\r\n" +
                 "Host: localhost\r\n" +
@@ -79,7 +80,7 @@ class HttpProtocolSelectorTest {
 
     @Test
     @DisplayName("[HTTP/2.0] HTTP/2 감지 시 HttpProtocolVersion.HTTP_2_0을 반환해야 한다.")
-    void should_throw_when_detect_http2_is_detected() throws IOException, HttpParsingException {
+    void should_throw_when_detect_http2_is_detected() throws IOException, HttpVersionDetectionException {
         // Given
         String rawRequest = "PRI * HTTP/2.0\\r\\n\\r\\nSM\\r\\n\\r\\n" +
                 "\r\n\r\n";
