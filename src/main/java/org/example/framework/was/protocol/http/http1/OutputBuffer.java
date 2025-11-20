@@ -1,6 +1,7 @@
 package org.example.framework.was.protocol.http.http1;
 
 import org.example.framework.exception.was.HttpWritingException;
+import org.example.framework.was.common.ServerMetadata;
 import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.model.HttpResponse;
 import org.example.framework.was.utils.HeaderNameFormatter;
@@ -37,7 +38,7 @@ public class OutputBuffer {
 
     private static final int DEFAULT_SIZE = 8192;
     private static final String RESPONSE_LINE_FORMAT = "%s %d %s\r\n";
-    private static final String SERVER_NAME = "WASEUNG";
+    private static final String SERVER_NAME = ServerMetadata.SERVER_NAME;
 
     private final OutputStream outputStream;
     private final byte[] buffer = new byte[DEFAULT_SIZE];
