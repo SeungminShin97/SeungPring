@@ -1,5 +1,7 @@
 package org.example.framework.was.protocol.model;
 
+import org.example.framework.was.utils.HeaderNameFormatter;
+
 import java.util.*;
 
 
@@ -74,7 +76,7 @@ public class HttpHeader {
         Map<String, List<String>> deepCopiedMap = new HashMap<>();
 
         for (Map.Entry<String, List<String>> entry : headers.entrySet())
-            deepCopiedMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            deepCopiedMap.put(HeaderNameFormatter.toTitleCase(entry.getKey()), new ArrayList<>(entry.getValue()));
 
         return Collections.unmodifiableMap(deepCopiedMap);
     }
