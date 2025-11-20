@@ -3,6 +3,7 @@ package org.example.framework.was.protocol.http.http1;
 import org.example.framework.exception.was.HttpWritingException;
 import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.model.HttpResponse;
+import org.example.framework.was.utils.HeaderNameFormatter;
 import org.example.framework.was.utils.HttpDateUtil;
 
 import java.io.IOException;
@@ -109,8 +110,11 @@ public class OutputBuffer {
         StringBuilder otherHeaderFields = new StringBuilder();
         response.getHeader().getAll().forEach((k, v) ->{
             // 필수 헤더 목록에 없는 경우에만 추가
-            if(!mandatoryHeaders.contains(k.toUpperCase()))
-                otherHeaderFields.append(k).append(": ").append(v).append("\r\n");
+            if(!mandatoryHeaders.contains(k.toUpperCase())) {
+                v.forEach(value -> {
+                    otherHeaderFields.append(k).append(": ").append(value).append("\r\n");
+                });
+            }
         });
 
         String headerWithResponseLine =
@@ -160,11 +164,24 @@ public class OutputBuffer {
      * @throws IOException I/O 오류 발생 시
      */
     private void writeInternal(byte[] data, int off, int len) throws IOException {
-        if (pos + len > buffer.length) {
-            flushInternal();
+        int currentOffset = off;
+        int remaining = len;
+
+        while (remaining > 0) {
+            // 버퍼에 남은 공간
+            int availableSpace = buffer.length - pos;
+            // 복사 가능한 공간
+            int copyLength = Math.min(availableSpace, remaining);
+
+            // 배열 복사
+            System.arraycopy(data, currentOffset, buffer, pos, copyLength);
+            pos += copyLength;
+            currentOffset += copyLength;
+            remaining -= copyLength;
+
+            if(pos == buffer.length)
+                flushInternal();
         }
-        System.arraycopy(data, off, buffer, pos, len);
-        pos += len;
     }
 
     /**
@@ -202,7 +219,7 @@ public class OutputBuffer {
      *
      * @throws IOException I/O 오류 발생 시
      */
-    private void flushInternal() throws IOException {
+    protected void flushInternal() throws IOException {
         if (pos > 0) {
             outputStream.write(buffer, 0, pos);
             pos = 0;
