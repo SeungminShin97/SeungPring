@@ -1,7 +1,9 @@
 package org.example.framework.was.protocol.core;
 
 import org.example.framework.exception.was.HttpParsingException;
+import org.example.framework.exception.was.HttpWritingException;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -59,5 +61,5 @@ public abstract class HttpProtocolHandler {
      * @param outputStream 클라이언트에게 응답을 보낼 스트림
      * @throws HttpParsingException 요청 파싱 과정에서 프로토콜 규격 위반 또는 형식 오류가 발생한 경우
      */
-    public abstract void process(InputStream inputStream, OutputStream outputStream) throws HttpParsingException;
+    public abstract void process(InputStream inputStream, OutputStream outputStream) throws HttpParsingException, HttpWritingException, IOException;
 }
