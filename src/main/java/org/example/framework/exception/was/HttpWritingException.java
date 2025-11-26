@@ -6,6 +6,8 @@ package org.example.framework.exception.was;
  */
 public class HttpWritingException extends Exception {
 
+    public HttpWritingException() {}
+
     public HttpWritingException(String message) {
         super(message);
     }

@@ -5,6 +5,8 @@ package org.example.framework.exception.was;
  */
 public class HttpVersionDetectionException extends Exception{
 
+    public HttpVersionDetectionException() {}
+
     public HttpVersionDetectionException(String message) {
         super(message);
     }

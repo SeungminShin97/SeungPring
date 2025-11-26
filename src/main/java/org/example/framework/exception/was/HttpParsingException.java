@@ -6,6 +6,8 @@ package org.example.framework.exception.was;
  */
 public class HttpParsingException extends Exception{
 
+    public HttpParsingException() {}
+
     public HttpParsingException(String message) {
         super(message);
     }
