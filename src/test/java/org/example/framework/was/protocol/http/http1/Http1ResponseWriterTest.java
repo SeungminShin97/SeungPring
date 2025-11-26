@@ -5,6 +5,7 @@ import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.model.HttpBody;
 import org.example.framework.was.protocol.model.HttpHeader;
 import org.example.framework.was.protocol.model.HttpResponse;
+import org.example.framework.was.protocol.model.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ class Http1ResponseWriterTest {
     private HttpResponse getResponse(HttpBody body) {
         HttpHeader header = new HttpHeader();
         header.put("test", "test");
-        return new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, 200, "OK");
+        return new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, HttpStatus.OK);
     }
 
     @Test

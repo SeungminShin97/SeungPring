@@ -83,7 +83,7 @@ public class OutputBuffer {
                 RESPONSE_LINE_FORMAT,
                 response.getVersion().getProtocolString(),
                 response.getStatusCode(),
-                response.getMessage()
+                response.getReason()
         );
 
         // 필수 헤더

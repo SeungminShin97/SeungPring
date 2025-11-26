@@ -2,6 +2,7 @@ package org.example.framework.was.protocol.core;
 
 import org.example.framework.exception.was.HttpParsingException;
 import org.example.framework.exception.was.HttpWritingException;
+import org.example.framework.was.protocol.model.HttpStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,5 +63,5 @@ public abstract class HttpProtocolHandler {
      * @throws HttpParsingException 요청 파싱 과정에서 프로토콜 규격 위반 또는 형식 오류가 발생한 경우
      */
     public abstract void process(InputStream inputStream, OutputStream outputStream) throws HttpParsingException, HttpWritingException, IOException;
-    public abstract void handleError(OutputStream outputStream, int statusCode, String message, Throwable throwable) throws HttpWritingException, IOException;
+    public abstract void handleError(OutputStream outputStream, HttpStatus httpStatus, Throwable throwable) throws HttpWritingException, IOException;
 }

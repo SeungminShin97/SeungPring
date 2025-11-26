@@ -5,6 +5,7 @@ import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.model.HttpBody;
 import org.example.framework.was.protocol.model.HttpHeader;
 import org.example.framework.was.protocol.model.HttpResponse;
+import org.example.framework.was.protocol.model.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,7 +61,7 @@ class OutputBufferTest {
 
         HttpBody body = HttpBody.empty();
 
-        HttpResponse response = new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, 200, "OK");
+        HttpResponse response = new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, HttpStatus.OK);
 
         // when
         buffer.sendHeaders(response);
@@ -88,7 +89,7 @@ class OutputBufferTest {
         byte[] data = expectedBody.getBytes(StandardCharsets.UTF_8);
         HttpBody body = new HttpBody(data);
 
-        HttpResponse response = new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, 200, "OK");
+        HttpResponse response = new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, HttpStatus.OK);
         buffer.sendHeaders(response);
         buffer.flush();
 
@@ -115,7 +116,7 @@ class OutputBufferTest {
         header.put("X-Custom-Header", "ShouldBeIncludedWhenHeadersAreDuplicated");  // 필수 헤더가 아닌 경우 중복 출력 되어야 함
 
         HttpBody body = HttpBody.empty();
-        HttpResponse response = new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, 200, "OK");
+        HttpResponse response = new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, HttpStatus.OK);
 
         // when
         buffer.sendHeaders(response);

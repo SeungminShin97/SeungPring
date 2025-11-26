@@ -14,23 +14,19 @@ import org.example.framework.was.protocol.HttpProtocolVersion;
  */
 public class HttpResponse extends HttpMessage{
 
-    /** 상태 코드 */
-    private final int statusCode;
+    /** HTTP 상태 */
+    private final HttpStatus httpStatus;
 
-    /** 상태 메세지 */
-    private final String message;
-
-    public HttpResponse(HttpHeader header, HttpBody body, HttpProtocolVersion version, int statusCode, String message) {
+    public HttpResponse(HttpHeader header, HttpBody body, HttpProtocolVersion version, HttpStatus httpStatus) {
         super(version, header,body);
-        this.statusCode = statusCode;
-        this.message = message;
+        this.httpStatus = httpStatus;
     }
 
     public int getStatusCode() {
-        return statusCode;
+        return httpStatus.code();
     }
 
-    public String getMessage() {
-        return message;
+    public String getReason() {
+        return httpStatus.reason();
     }
 }

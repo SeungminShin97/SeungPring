@@ -6,10 +6,7 @@ import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.core.HttpProtocolHandler;
 import org.example.framework.was.protocol.core.RequestParser;
 import org.example.framework.was.protocol.core.ResponseWriter;
-import org.example.framework.was.protocol.model.HttpBody;
-import org.example.framework.was.protocol.model.HttpHeader;
-import org.example.framework.was.protocol.model.HttpMessage;
-import org.example.framework.was.protocol.model.HttpResponse;
+import org.example.framework.was.protocol.model.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +55,7 @@ public class Http1ProtocolHandler extends HttpProtocolHandler {
     public void process(InputStream inputStream, OutputStream outputStream) throws HttpParsingException, UnsupportedCharsetException, HttpWritingException, IOException {
         HttpMessage request = super.requestParser.parse(inputStream);
         //TODO: 디스패처 서블릿 구현 시 교체
-        HttpResponse response = new HttpResponse(null, null, null, 200, null);
+        HttpResponse response = new HttpResponse(null, null, null, HttpStatus.OK);
         super.responseWriter.write(outputStream, response);
     }
 
@@ -68,15 +65,14 @@ public class Http1ProtocolHandler extends HttpProtocolHandler {
      * 에러 메시지(HTML 형식)와 {@code Connection: close} 헤더를 포함한 완전한 HTTP 응답을 작성한다.
      *
      * @param outputStream 클라이언트로의 출력 스트림
-     * @param statusCode HTTP 에러 상태 코드 (예: 400, 500)
-     * @param message 상태 코드에 해당하는 상태 메시지
+     * @param httpStatus Http 상태
      * @param throwable 에러의 원인이 된 예외 객체
      * @throws HttpWritingException 응답 작성 중 오류 발생 시
      * @throws IOException 소켓 I/O 작업 중 오류 발생 시
      */
     @Override
-    public void handleError(OutputStream outputStream, int statusCode, String message, Throwable throwable) throws HttpWritingException, IOException {
-        String bodyFormat = String.format("<h1>Error %d: %s</h1>\n<p>%s.</p>", statusCode, message, throwable.getMessage());
+    public void handleError(OutputStream outputStream, HttpStatus httpStatus, Throwable throwable) throws HttpWritingException, IOException {
+        String bodyFormat = String.format("<h1>Error %d: %s</h1>\n<p>%s.</p>", httpStatus.code(), httpStatus.reason(), throwable.getMessage());
         byte[] data = bodyFormat.getBytes(StandardCharsets.UTF_8);
         HttpBody body = new HttpBody(data);
 
@@ -84,7 +80,7 @@ public class Http1ProtocolHandler extends HttpProtocolHandler {
         header.put("Content-Type", "text/html; charset=utf-8");
         header.put("Connection", "close");
 
-        HttpResponse response = new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, statusCode, message);
+        HttpResponse response = new HttpResponse(header, body, HttpProtocolVersion.HTTP_1_1, httpStatus);
         super.responseWriter.write(outputStream, response);
     }
 }

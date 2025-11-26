@@ -6,6 +6,7 @@ import org.example.framework.exception.was.HttpWritingException;
 import org.example.framework.was.protocol.core.HttpProtocolHandler;
 import org.example.framework.was.protocol.core.RequestParser;
 import org.example.framework.was.protocol.core.ResponseWriter;
+import org.example.framework.was.protocol.model.HttpStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +35,7 @@ public class Http2ProtocolHandler extends HttpProtocolHandler {
     }
 
     @Override
-    public void handleError(OutputStream outputStream, int statusCode, String message, Throwable throwable) throws HttpWritingException, IOException {
+    public void handleError(OutputStream outputStream, HttpStatus httpStatus, Throwable throwable) throws HttpWritingException, IOException {
 
     }
 }

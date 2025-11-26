@@ -7,6 +7,7 @@ import org.example.framework.was.protocol.HttpProtocolSelector;
 import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.core.HttpProtocolHandler;
 import org.example.framework.was.protocol.http.HttpProtocolHandlerFactory;
+import org.example.framework.was.protocol.model.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,12 +66,12 @@ public class SocketProcessor implements Runnable{
         } catch (HttpVersionDetectionException e) {
             log.error("[SocketProcessor] Cannot detect Http Version, connection closed by client/network: {}", e.getMessage());
         } catch (HttpParsingException e) {
-            sendErrorResponse(handler, out, 400, "Bad Request", e);
+            sendErrorResponse(handler, out, HttpStatus.BAD_REQUEST, e);
         } catch (HttpWritingException e) {
-            sendErrorResponse(handler, out, 500, "Internal Server Error", e);
+            sendErrorResponse(handler, out, HttpStatus.INTERNAL_SERVER_ERROR, e);
         } catch (Exception e) {
             log.error("[SocketProcessor] Uncaught Internal Server Exception (500): {}", e.getMessage(), e);
-            sendErrorResponse(handler, out, 500, "Internal Server Error", e);
+            sendErrorResponse(handler, out, HttpStatus.INTERNAL_SERVER_ERROR, e);
         }
     }
 
@@ -79,14 +80,13 @@ public class SocketProcessor implements Runnable{
      *
      * @param handler     사용 중인 프로토콜 핸들러
      * @param out         소켓 OutputStream
-     * @param statusCode  HTTP 상태 코드
-     * @param message     상태 메시지
+     * @param httpStatus  HTTP 상태
      * @param throwable   발생한 예외
      *
      * 핸들러가 null이거나 스트림이 없으면 응답 전송을 생략한다.
      * 첫 응답 실패 시 500 에러로 한 번 더 재전송을 시도한다.
      */
-    private void sendErrorResponse(HttpProtocolHandler handler, OutputStream out, int statusCode, String message, Throwable throwable) {
+    private void sendErrorResponse(HttpProtocolHandler handler, OutputStream out, HttpStatus httpStatus, Throwable throwable) {
         if(handler == null || out == null) {
             log.error("[SocketProcessor] Cannot send error response; handler or outputStream is null.");
             return;
@@ -94,14 +94,14 @@ public class SocketProcessor implements Runnable{
 
         // 1차 시도
         try {
-            handler.handleError(out, statusCode, message, throwable);
-            log.warn("[SocketProcessor] Successfully sent {} response.", statusCode);
+            handler.handleError(out, httpStatus, throwable);
+            log.warn("[SocketProcessor] Successfully sent {} response.", httpStatus.code());
         } catch (Exception ex) {
-            log.error("[Fatal] Failed to send {} response. Attempting 500 fallback: {}", statusCode, ex.getMessage());
+            log.error("[Fatal] Failed to send {} response. Attempting 500 fallback: {}", httpStatus.code(), ex.getMessage());
 
             // 2차 시도
             try {
-                handler.handleError(out, 500, "Internal Server Error", ex);
+                handler.handleError(out, HttpStatus.INTERNAL_SERVER_ERROR, ex);
                 log.warn("[Error Handler] Successfully sent 500 fallback response.");
             } catch (Exception finalEx) {
                 log.error("[Critical] Failed to send 500 fallback response. Connection is likely broken: {}", finalEx.getMessage());
