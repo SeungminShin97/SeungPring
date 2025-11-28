@@ -1,6 +1,8 @@
 package org.example.framework.was.endpoint;
 
 import org.example.framework.was.processor.SocketProcessor;
+import org.example.framework.was.protocol.HttpProtocolSelector;
+import org.example.framework.was.protocol.http.HttpProtocolHandlerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,10 +25,14 @@ public class BioEndpoint extends AbstractEndpoint{
 
     private final ExecutorService executor;
     private ServerSocket serverSocket;
+    private final HttpProtocolSelector selector;
+    private final HttpProtocolHandlerFactory handlerFactory;
 
-    public BioEndpoint(int port, ExecutorService executor) {
+    public BioEndpoint(int port, ExecutorService executor, HttpProtocolSelector selector, HttpProtocolHandlerFactory handlerFactory) {
         super(port);
         this.executor = executor;
+        this.selector = selector;
+        this.handlerFactory = handlerFactory;
     }
 
     @Override
@@ -45,7 +51,7 @@ public class BioEndpoint extends AbstractEndpoint{
                 Socket clientSocket = serverSocket.accept();
                 log.info("[BioEndpoint] Accepted {}", clientSocket.getRemoteSocketAddress());
                 // 요청 처리
-                executor.execute(new SocketProcessor(clientSocket));
+                executor.execute(new SocketProcessor(clientSocket, selector, handlerFactory));
             } catch (IOException e) {
                 if(isRunning())
                     log.info("[BioEndpoint] Error accepting connection: {}", e.getMessage());
