@@ -11,6 +11,7 @@ import org.example.framework.was.protocol.model.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -50,14 +51,17 @@ public class SocketProcessor implements Runnable{
      */
     @Override
     public void run() {
-        InputStream in = null;
         OutputStream out = null;
         HttpProtocolHandler handler = null;
         try (socket) {
-            in = socket.getInputStream();
+            InputStream raw = socket.getInputStream();
+            BufferedInputStream in = new BufferedInputStream(raw);
             out = socket.getOutputStream();
 
+            in.mark(8192);
             HttpProtocolVersion version = selector.detect(in);
+            in.reset();
+
             handler = handlerFactory.getHandler(version);
 
             handler.process(in, out);
