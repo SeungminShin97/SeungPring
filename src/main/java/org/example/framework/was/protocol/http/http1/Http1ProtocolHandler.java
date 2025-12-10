@@ -53,10 +53,27 @@ public class Http1ProtocolHandler extends HttpProtocolHandler {
      */
     @Override
     public void process(InputStream inputStream, OutputStream outputStream) throws HttpParsingException, UnsupportedCharsetException, HttpWritingException, IOException {
+        System.out.println("start parsing");
         HttpMessage request = super.requestParser.parse(inputStream);
+        System.out.println("parsing success");
         //TODO: 디스패처 서블릿 구현 시 교체
-        HttpResponse response = new HttpResponse(null, null, null, HttpStatus.OK);
+        String message = "SeungPring OK";
+        byte[] bodyBytes = message.getBytes(StandardCharsets.UTF_8);
+        HttpBody body = new HttpBody(bodyBytes);
+
+        HttpHeader header = new HttpHeader();
+        header.put("Content-Type", "text/plain; charset=UTF-8");
+        header.put("Content-Length", String.valueOf(bodyBytes.length));
+
+        HttpResponse response = new HttpResponse(
+                header,
+                body,
+                HttpProtocolVersion.HTTP_1_1,
+                HttpStatus.OK
+        );
+        System.out.println("start write");
         super.responseWriter.write(outputStream, response);
+        System.out.println("write success");
     }
 
     /**
