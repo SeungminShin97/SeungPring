@@ -6,8 +6,10 @@ import org.example.framework.was.protocol.core.RequestParser;
 import org.example.framework.was.protocol.http.http1.Http1RequestParser;
 import org.example.framework.was.protocol.model.HttpMethod;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -36,10 +38,11 @@ public class HttpProtocolSelector {
      * @throws HttpVersionDetectionException 유효한 HTTP 프로토콜(1.1 또는 2.0 프리페이스)로 시작하지 않는 경우
      */
     public HttpProtocolVersion detect(InputStream inputStream) throws IOException, HttpVersionDetectionException {
-        inputStream.mark(24);
         byte[] preface = inputStream.readNBytes(24);
-        String text = new String(preface);
-        inputStream.reset();
+        if(preface.length == 0)
+            throw new HttpVersionDetectionException("Empty request preface");
+
+        String text = new String(preface, StandardCharsets.US_ASCII);
 
 
         if(text.startsWith("PRI * HTTP/2.0"))
