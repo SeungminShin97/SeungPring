@@ -5,10 +5,12 @@ import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.core.DependencyInjector;
 import org.example.framework.exception.bean.BeanCreationException;
+import org.example.framework.exception.bean.CircularDependencyException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MyBeanFactory implements BeanFactory {
 
@@ -17,6 +19,8 @@ public class MyBeanFactory implements BeanFactory {
 
     /** Cache of singleton objects: bean name --> bean instance */
     private final Map<String, Object> singletonObjects = new HashMap<>();
+
+    private final Set<String> inCreation = ConcurrentHashMap.newKeySet();
 
     public MyBeanFactory(DependencyInjector injector, BeanDefinitionRegistry registry) {
         this.injector = injector;
@@ -91,14 +95,23 @@ public class MyBeanFactory implements BeanFactory {
         if(containsSingleton(beanName))
             return singletonObjects.get(beanName);
 
-        // 등록된 Bean 이 없으면 생성
-        BeanDefinition beanDefinition = getBeanDefinitionOrThrow(beanName);
-        Object obj = createBean(beanDefinition);
+        // 순환참조 방지
+        if(inCreation.contains(beanName))
+            throw new CircularDependencyException(beanName);
 
-        if(beanDefinition.isSingleton())
-            singletonObjects.put(beanName, obj);
+        try{
+            inCreation.add(beanName);
 
-        return obj;
+            // 등록된 Bean 이 없으면 생성
+            BeanDefinition beanDefinition = getBeanDefinitionOrThrow(beanName);
+            Object obj = createBean(beanDefinition);
+
+            if(beanDefinition.isSingleton())
+                singletonObjects.put(beanName, obj);
+            return obj;
+        } finally {
+            inCreation.remove(beanName);
+        }
     }
 
     /**
