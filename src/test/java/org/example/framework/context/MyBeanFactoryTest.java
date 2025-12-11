@@ -3,6 +3,7 @@ package org.example.framework.context;
 import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
+import org.example.test.DummyBean;
 import org.example.test.DummyChildService;
 import org.example.test.DummyController;
 import org.example.test.DummyService;
@@ -124,6 +125,23 @@ class MyBeanFactoryTest {
         assertNotNull(bean1);
         assertNotNull(bean2);
         assertSame(bean1, bean2);
+    }
+    
+    @Test
+    @DisplayName("@Autowired 기반 생성자 DI가 정상적으로 이루어져야 한다.")
+    public void should_inject_dependency_via_autowired_constructor() {
+        //given
+        BeanDefinition childBean = new BeanDefinition(DummyChildService.class, ScopeType.SINGLETON);
+        BeanDefinition dummyBean = new BeanDefinition(DummyBean.class, ScopeType.SINGLETON);
+        registry.registerBeanDefinition(childBean);
+        registry.registerBeanDefinition(dummyBean);
+        
+        //when
+        DummyChildService service = factory.getBean(DummyChildService.class);
+
+        //then
+        assertNotNull(service);
+        assertTrue(service.hasDummyBean());
     }
 
     @Nested
