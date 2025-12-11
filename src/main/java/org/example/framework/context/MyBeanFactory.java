@@ -8,10 +8,7 @@ import org.example.framework.exception.bean.BeanCreationException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MyBeanFactory implements BeanFactory {
 
@@ -241,11 +238,14 @@ public class MyBeanFactory implements BeanFactory {
         if(constructors.length == 1)
             return constructors[0];
 
-        try {
-            return clazz.getDeclaredConstructor();
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException("No @Autowired constructor and no default constructor found: " + clazz.getName());
-        }
+        Constructor<?>[] publicConstructors = clazz.getConstructors();
+        Arrays.sort(publicConstructors,
+                Comparator.comparingInt(c -> ((Constructor<?>)c).getParameterCount()).reversed());
+
+        if(publicConstructors.length > 0)
+            return publicConstructors[0];
+
+        throw new IllegalStateException("No @Autowired constructor, no single public constructor, and no public constructors found for " + clazz.getName());
     }
 
     /**
