@@ -30,6 +30,11 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
     }
 
     @Override
+    public void registerBeanDefinition(BeanDefinition beanDefinition) {
+        registerBeanDefinition(beanDefinition.getBeanName(), beanDefinition);
+    }
+
+    @Override
     public BeanDefinition getBeanDefinition(String beanName) {
         Objects.requireNonNull(beanName, "BeanName is null");
         BeanDefinition beanDefinition = beanDefinitions.get(beanName);

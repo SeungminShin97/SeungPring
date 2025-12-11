@@ -21,6 +21,13 @@ public interface BeanDefinitionRegistry {
     void registerBeanDefinition(String beanName, BeanDefinition beanDefinition);
 
     /**
+     * 주어진 이름으로 {@link BeanDefinition}을 등록한다.
+     *
+     * @param beanDefinition  등록할 {@link BeanDefinition}
+     */
+    void registerBeanDefinition(BeanDefinition beanDefinition);
+
+    /**
      * 지정된 이름의 {@link BeanDefinition}을 반환한다.
      *
      * @param beanName 조회할 Bean의 이름
