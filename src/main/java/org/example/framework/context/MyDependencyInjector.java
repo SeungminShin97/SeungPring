@@ -6,6 +6,7 @@ import org.example.framework.core.DependencyInjector;
 
 import java.beans.Introspector;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 public class MyDependencyInjector implements DependencyInjector {
 
@@ -22,6 +23,9 @@ public class MyDependencyInjector implements DependencyInjector {
         // getDeclaredFields : 현재 클래스의 모든 필드(public, protected, private) / 부모 클래스 필드는 제외
         for(Field field : target.getClass().getDeclaredFields()) {
             if(!field.isAnnotationPresent(Autowired.class)) continue;
+
+            // final 필드의 경우 생성자 주입
+            if(Modifier.isFinal(field.getModifiers())) continue;
 
             field.setAccessible(true);
             String dependencyName = resolveBeanName(field);

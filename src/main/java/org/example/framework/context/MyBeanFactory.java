@@ -1,5 +1,6 @@
 package org.example.framework.context;
 
+import org.example.framework.annotation.Autowired;
 import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.core.DependencyInjector;
@@ -7,7 +8,9 @@ import org.example.framework.exception.bean.BeanCreationException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MyBeanFactory implements BeanFactory {
@@ -185,14 +188,11 @@ public class MyBeanFactory implements BeanFactory {
         try {
             Class<?> clazz = def.getBeanClass();
 
-            /**
-             * TODO: 생성자 주입 기능
-             * 현재 기본 생성자를 가진 클래스만 생성 가능 <br>
-             * 나중에 생성자 선택 + 주입 기능 추가해야 됨
-             */
-            Constructor<?> ctor = clazz.getDeclaredConstructor();
-            ctor.setAccessible(true);
-            Object instance = ctor.newInstance();
+            Constructor<?> constructor = resolveConstructor(clazz);
+            Object[] args = resolveConstructorArgs(constructor);
+
+            constructor.setAccessible(true);
+            Object instance = constructor.newInstance(args);
 
             // 의존성 주입
             injector.inject(instance, this);
@@ -200,5 +200,75 @@ public class MyBeanFactory implements BeanFactory {
         } catch (Exception e) {
             throw new BeanCreationException(def.getBeanName(), e);
         }
+    }
+
+    /**
+     * Bean 생성 시 사용할 적절한 생성자를 선택한다.
+     *
+     * <p>생성자 선택 규칙은 Spring Framework의 의존성 주입 방식과 유사하게 동작한다.</p>
+     *
+     * <ul>
+     *     <li>@Autowired가 지정된 생성자가 하나인 경우 해당 생성자를 사용한다.</li>
+     *     <li>@Autowired가 여러 개 존재하면 명확한 생성자를 결정할 수 없으므로 예외를 발생시킨다.</li>
+     *     <li>@Autowired 생성자가 없고, 공개(public) 생성자가 하나뿐이라면 해당 생성자를 사용한다.</li>
+     *     <li>여러 생성자가 존재하지만 기본 생성자가 있는 경우 기본 생성자를 사용한다.</li>
+     *     <li>위 조건을 만족하지 않으면 적절한 생성자를 찾을 수 없으므로 예외를 발생시킨다.</li>
+     * </ul>
+     *
+     * @param clazz Bean을 생성할 대상 클래스
+     * @return 선택된 {@link Constructor} 객체
+     * @throws IllegalStateException 적절한 생성자를 결정할 수 없거나,
+     *                               기본 생성자가 존재하지 않는 경우
+     */
+    private Constructor<?> resolveConstructor(Class<?> clazz) {
+        Constructor<?>[] constructors = clazz.getConstructors();
+
+        // Autowired 생성자 추출
+        List<Constructor<?>> autowiredConstructor =
+                Arrays.stream(constructors)
+                        .filter(t -> t.isAnnotationPresent(Autowired.class))
+                        .toList();
+
+        // Autowired 생성자 2개 이상일 경우 예외 발생
+        if(autowiredConstructor.size() > 1)
+            throw new IllegalStateException("Multiple @Autowired constructors not supported: " + clazz.getName());
+
+        // Autowired 생성자가 1개 일 경우
+        if(autowiredConstructor.size() == 1)
+            return autowiredConstructor.getFirst();
+
+        // Autowired 생성자가 없고 일반 생성자만 하나 있을 경우
+        if(constructors.length == 1)
+            return constructors[0];
+
+        try {
+            return clazz.getDeclaredConstructor();
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("No @Autowired constructor and no default constructor found: " + clazz.getName());
+        }
+    }
+
+    /**
+     * 선택된 생성자의 파라미터 타입을 기반으로 필요한 의존성을 조회하여
+     * 생성자 호출에 사용할 인자 배열을 생성한다.
+     *
+     * <p>각 파라미터 타입에 대해 {@link BeanFactory#getBean(Class)}를 호출하여
+     * 해당 타입의 Bean 인스턴스를 가져오며, 생성자 기반 의존성 주입 시
+     * 사용되는 인자 목록을 완성한다.</p>
+
+     *
+     * @param constructor 생성자 주입에 사용할 {@link Constructor} 객체
+     * @return 생성자 호출 시 전달할 인자 배열
+     */
+
+    private Object[] resolveConstructorArgs(Constructor<?> constructor) {
+        // 파리미터 타입 기반 bean 추출
+        Class<?>[] paramType = constructor.getParameterTypes();
+        Object[] args = new Object[paramType.length];
+
+        for(int i = 0; i < paramType.length; i++)
+            args[i] = getBean(paramType[i]);
+
+        return args;
     }
 }
