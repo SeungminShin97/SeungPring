@@ -1,4 +1,4 @@
-package org.example.framework.was.server;
+package org.example.server;
 
 import org.example.framework.was.connector.Connector;
 import org.example.framework.was.protocol.HttpProtocolSelector;
