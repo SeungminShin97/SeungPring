@@ -66,7 +66,7 @@ public class DefaultServletAdapter implements ServletAdapter {
      * @param response 처리 결과를 기록할 HTTP 응답 객체
      */
     @Override
-    public void service(HttpRequest request, HttpResponse response) {
+    public void service(HttpRequest request, HttpResponse response) throws Exception {
         connector.getService().getContainer().service(request, response);
     }
 }

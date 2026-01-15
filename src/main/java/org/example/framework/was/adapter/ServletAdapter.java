@@ -39,5 +39,5 @@ public interface ServletAdapter {
      * @param request  WAS 내부 요청 모델
      * @param response WAS 내부 응답 모델
      */
-    void service(HttpRequest request, HttpResponse response);
+    void service(HttpRequest request, HttpResponse response) throws Exception;
 }
