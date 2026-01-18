@@ -1,6 +1,7 @@
 package org.example.framework.was.adapter;
 
 import org.example.framework.was.connector.Connector;
+import org.example.framework.was.container.ServletContainer;
 import org.example.framework.was.protocol.model.HttpRequest;
 import org.example.framework.was.protocol.model.HttpResponse;
 
@@ -40,15 +41,15 @@ import org.example.framework.was.protocol.model.HttpResponse;
  */
 public class DefaultServletAdapter implements ServletAdapter {
 
-    private final Connector connector;
+    private final ServletContainer container;
 
     /**
      * Connector 계층과의 연결을 담당하는 어댑터를 생성합니다.
      *
-     * @param connector WAS 진입 지점 역할을 수행하는 Connector
+     * @param container
      */
-    public DefaultServletAdapter(Connector connector) {
-        this.connector = connector;
+    public DefaultServletAdapter(ServletContainer container) {
+        this.container = container;
     }
 
     /**
@@ -67,6 +68,6 @@ public class DefaultServletAdapter implements ServletAdapter {
      */
     @Override
     public void service(HttpRequest request, HttpResponse response) throws Exception {
-        connector.getService().getContainer().service(request, response);
+        container.service(request, response);
     }
 }
