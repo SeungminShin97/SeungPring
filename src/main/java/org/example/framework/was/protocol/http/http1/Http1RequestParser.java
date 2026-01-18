@@ -38,7 +38,7 @@ public class Http1RequestParser implements RequestParser {
     }
 
     @Override
-    public HttpMessage parse(InputStream inputStream) throws HttpParsingException, UnsupportedCharsetException{
+    public HttpRequest parse(InputStream inputStream) throws HttpParsingException, UnsupportedCharsetException{
         DataInputStream dataInputStream = new DataInputStream(inputStream);
 
         // Http 요청 라인 처리

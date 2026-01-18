@@ -62,6 +62,6 @@ public abstract class HttpProtocolHandler {
      * @param outputStream 클라이언트에게 응답을 보낼 스트림
      * @throws HttpParsingException 요청 파싱 과정에서 프로토콜 규격 위반 또는 형식 오류가 발생한 경우
      */
-    public abstract void process(InputStream inputStream, OutputStream outputStream) throws HttpParsingException, HttpWritingException, IOException;
+    public abstract void process(InputStream inputStream, OutputStream outputStream) throws Exception;
     public abstract void handleError(OutputStream outputStream, HttpStatus httpStatus, Throwable throwable) throws HttpWritingException, IOException;
 }

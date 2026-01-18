@@ -2,6 +2,8 @@ package org.example.framework.was.protocol.http.http1;
 
 import org.example.framework.exception.was.HttpParsingException;
 import org.example.framework.exception.was.HttpWritingException;
+import org.example.framework.was.adapter.ServletAdapter;
+import org.example.framework.was.container.Servlet;
 import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.core.HttpProtocolHandler;
 import org.example.framework.was.protocol.core.RequestParser;
@@ -18,23 +20,18 @@ import java.nio.charset.UnsupportedCharsetException;
  * HTTP/1.1 프로토콜 처리를 위한 구체적인 핸들러 구현체.
  * <p>
  * HTTP/1.1 규약에 따라 요청을 파싱하고 응답을 작성하는 역할을 담당하며,
- * HttpProtocolHandler의 기능을 상속받아 사용한다. 싱글턴으로 구현되었다.
+ * HttpProtocolHandler의 기능을 상속받아 사용한다.
  */
 public class Http1ProtocolHandler extends HttpProtocolHandler {
 
-    private Http1ProtocolHandler(RequestParser requestParser, ResponseWriter responseWriter) {
-        super(requestParser, responseWriter);
-    }
+    private final ServletAdapter adapter;
 
-    private static class Holder {
-        static final Http1ProtocolHandler INSTANCE = new Http1ProtocolHandler(
+    public Http1ProtocolHandler(ServletAdapter adapter) {
+        super(
                 Http1RequestParser.getInstance(),
                 Http1ResponseWriter.getInstance()
         );
-    }
-
-    public static Http1ProtocolHandler getInstance() {
-        return Holder.INSTANCE;
+        this.adapter = adapter;
     }
 
     /**
@@ -52,28 +49,12 @@ public class Http1ProtocolHandler extends HttpProtocolHandler {
      * @throws IOException 소켓 I/O 작업 중 오류 발생 시
      */
     @Override
-    public void process(InputStream inputStream, OutputStream outputStream) throws HttpParsingException, UnsupportedCharsetException, HttpWritingException, IOException {
-        System.out.println("start parsing");
-        HttpMessage request = super.requestParser.parse(inputStream);
-        System.out.println("parsing success");
-        //TODO: 디스패처 서블릿 구현 시 교체
-        String message = "SeungPring OK";
-        byte[] bodyBytes = message.getBytes(StandardCharsets.UTF_8);
-        HttpBody body = new HttpBody(bodyBytes);
+    public void process(InputStream inputStream, OutputStream outputStream) throws Exception {
+        HttpRequest request = super.requestParser.parse(inputStream);
+        HttpResponse response = new HttpResponse(HttpProtocolVersion.HTTP_1_1);
 
-        HttpHeader header = new HttpHeader();
-        header.put("Content-Type", "text/plain; charset=UTF-8");
-        header.put("Content-Length", String.valueOf(bodyBytes.length));
-
-        HttpResponse response = new HttpResponse(
-                header,
-                body,
-                HttpProtocolVersion.HTTP_1_1,
-                HttpStatus.OK
-        );
-        System.out.println("start write");
+        adapter.service(request,response);
         super.responseWriter.write(outputStream, response);
-        System.out.println("write success");
     }
 
     /**

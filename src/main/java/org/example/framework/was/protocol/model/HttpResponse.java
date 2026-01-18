@@ -22,6 +22,10 @@ public class HttpResponse extends HttpMessage{
         this.httpStatus = httpStatus;
     }
 
+    public HttpResponse(HttpProtocolVersion version) {
+        this(new HttpHeader(), HttpBody.empty(), version, HttpStatus.OK);
+    }
+
     public int getStatusCode() {
         return httpStatus.code();
     }
