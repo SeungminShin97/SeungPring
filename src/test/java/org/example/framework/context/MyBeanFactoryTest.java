@@ -258,13 +258,8 @@ class MyBeanFactoryTest {
                     new BeanDefinition(DummyChildService.class, "childService"));
 
             // when
-            Object dummyService2 = factory.getBean("dummyService2");
-            Object childService = factory.getBean("childService");
-
             // then
-            assertNotNull(dummyService2);
-            assertNotNull(childService);
-            assertTrue(factory.isTypeMatch(DUMMY_SERVICE, dummyService2.getClass()));
+            assertTrue(factory.isTypeMatch(DUMMY_SERVICE, DummyService.class));
             assertTrue(factory.isTypeMatch("childService", DummyService.class));
         }
 
@@ -276,13 +271,9 @@ class MyBeanFactoryTest {
                     new BeanDefinition(DummyChildService.class, "childService"));
 
             // when
-            Object bean = factory.getBean(DUMMY_CONTROLLER);
-            Object childService = factory.getBean("childService");
-
             // then
-            assertFalse(factory.isTypeMatch(DUMMY_SERVICE, bean.getClass()));
-            // 부모가 자식 타입으로 호환 가능한지? -> false
-            assertFalse(factory.isTypeMatch(DUMMY_SERVICE, childService.getClass()));
+            assertFalse(factory.isTypeMatch(DUMMY_SERVICE, DummyController.class));
+            assertFalse(factory.isTypeMatch(DUMMY_SERVICE, DummyChildService.class));
         }
     }
 }

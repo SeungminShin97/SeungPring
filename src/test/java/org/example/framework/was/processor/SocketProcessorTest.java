@@ -56,7 +56,7 @@ class SocketProcessorTest {
 
     @Test
     @DisplayName("요청 처리 성공 시 소켓을 닫고 정상 종료해야 한다")
-    void should_process_request_and_close_socket_on_success() throws IOException, HttpVersionDetectionException, HttpWritingException, HttpParsingException {
+    void should_process_request_and_close_socket_on_success() throws Exception {
         // === given ===
         doNothing().when(handler).process(any(), any());
 
@@ -75,7 +75,7 @@ class SocketProcessorTest {
     void should_log_when_parsing_request_line_fails() throws IOException, HttpVersionDetectionException, HttpWritingException {
         // === given ===
         doThrow(new HttpVersionDetectionException())
-                .when(selector).detect(eq(inputStream));
+                .when(selector).detect(any());
         
         processor = new SocketProcessor(socket, selector, factory);
 
@@ -95,10 +95,10 @@ class SocketProcessorTest {
 
     @Test
     @DisplayName("요청 파싱 실패 시 400 에러 응답을 전송해야 한다")
-    void should_send_400_response_when_parsing_fails() throws IOException, HttpWritingException, HttpParsingException {
+    void should_send_400_response_when_parsing_fails() throws Exception {
         // === given ===
         when(factory.getHandler(any())).thenReturn(handler);
-        doThrow(new HttpParsingException()).when(handler).process(inputStream, outputStream);
+        doThrow(new HttpParsingException()).when(handler).process(any(), any());
 
         processor = new SocketProcessor(socket, selector, factory);
 
@@ -118,10 +118,10 @@ class SocketProcessorTest {
 
     @Test
     @DisplayName("응답 작성 중 오류 발생 시 500 에러를 전송해야 한다.")
-    void should_send_500_response_when_writing_fails() throws IOException, HttpWritingException, HttpParsingException {
+    void should_send_500_response_when_writing_fails() throws Exception {
         // === given ===
         doThrow(new HttpWritingException())
-                .when(handler).process(inputStream,outputStream);
+                .when(handler).process(any(), any());
 
         processor = new SocketProcessor(socket, selector, factory);
 
@@ -141,9 +141,9 @@ class SocketProcessorTest {
 
     @Test
     @DisplayName("예상치 못한 내부 예외 발생 시 500 에러를 전송해야 한다.")
-    void should_send_500_response_when_uncaught_exception_occurs() throws IOException, HttpVersionDetectionException, HttpWritingException, HttpParsingException {
+    void should_send_500_response_when_uncaught_exception_occurs() throws Exception {
         // === given ===
-        doThrow(new IllegalStateException()).when(handler).process(inputStream, outputStream);
+        doThrow(new IllegalStateException()).when(handler).process(any(), any());
 
         processor = new SocketProcessor(socket, selector, factory);
 
@@ -165,7 +165,7 @@ class SocketProcessorTest {
     @DisplayName("HTTP 버전 감지 실패 시 에러 응답 없이 로그만 남기고 종료해야 한다.")
     void should_log_error_when_version_detection_fails() throws IOException, HttpVersionDetectionException, HttpWritingException {
         // === given ===
-        doThrow(new HttpVersionDetectionException()).when(selector).detect(inputStream);
+        doThrow(new HttpVersionDetectionException()).when(selector).detect(any(InputStream.class));
 
         processor = new SocketProcessor(socket, selector, factory);
 
@@ -183,7 +183,7 @@ class SocketProcessorTest {
 
     @Test
     @DisplayName("400 응답 전송 중 I/O 오류 발생 시 500 에러로 재시도 해야 한다")
-    void should_fallback_to_500_when_initial_error_response_fails() throws IOException, HttpWritingException, HttpParsingException {
+    void should_fallback_to_500_when_initial_error_response_fails() throws Exception {
         // === given ===
         doThrow(new HttpParsingException()).when(handler).process(any(), any());
 

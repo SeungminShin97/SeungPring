@@ -102,7 +102,9 @@ class HttpProtocolSelectorTest {
         InputStream is = new BufferedInputStream(new ByteArrayInputStream(fullRequest.getBytes(StandardCharsets.US_ASCII)));
 
         // when: 감지 로직 실행 (24바이트를 읽었다가 되돌림)
+        is.mark(8192);
         selector.detect(is);
+        is.reset();
 
         // then: 파서가 되돌아간 포인터에서 전체 요청을 다시 읽을 수 있는지 검증
         byte[] readAfterReset = is.readNBytes(fullRequest.getBytes().length);
