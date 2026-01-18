@@ -9,6 +9,8 @@ import org.example.framework.exception.bean.CircularDependencyException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -128,6 +130,24 @@ public class MyBeanFactory implements BeanFactory {
             return singletonObjects.get(name).getClass();
 
         return getBeanDefinitionOrThrow(name).getBeanClass();
+    }
+
+    /**
+     * 지정된 타입에 할당 가능한 모든 Bean 인스턴스를 조회합니다.<br>
+     * 내부적으로 모든 {@code BeanDefinition}을 순회하며, 요청된 타입에 {@code isAssignableFrom} 관계가 성립하는 Bean 만을 수집합니다.
+     *
+     * @param type 조회 대상 Bean 타입
+     * @return 해당 타입에 할당 가능한 모든 Bean 리스트
+     */
+    public List<Object> getBeansOfType(Class<?> type) {
+        List<Object> result = new ArrayList<>();
+
+        for(BeanDefinition def : registry.getBeanDefinitions()) {
+            if(type.isAssignableFrom(def.getBeanClass()))
+                result.add(getBean(def.getBeanName()));
+        }
+
+        return result;
     }
 
     /**
@@ -273,15 +293,36 @@ public class MyBeanFactory implements BeanFactory {
      * @param constructor 생성자 주입에 사용할 {@link Constructor} 객체
      * @return 생성자 호출 시 전달할 인자 배열
      */
-
     private Object[] resolveConstructorArgs(Constructor<?> constructor) {
         // 파리미터 타입 기반 bean 추출
-        Class<?>[] paramType = constructor.getParameterTypes();
-        Object[] args = new Object[paramType.length];
+        Class<?>[] paramTypes = constructor.getParameterTypes();
+        Type[] genericTypes = constructor.getGenericParameterTypes();
 
-        for(int i = 0; i < paramType.length; i++)
-            args[i] = getBean(paramType[i]);
+        Object[] args = new Object[paramTypes.length];
+
+        for(int i = 0; i < paramTypes.length; i++) {
+            Class<?> paramType = paramTypes[i];
+
+            if(List.class.isAssignableFrom(paramType)) {
+                Class<?> genericType = resolveGenericType(genericTypes[i]);
+                args[i] = getBeansOfType(genericType);
+                continue;
+            }
+            args[i] = getBean(paramType);
+        }
 
         return args;
+    }
+
+    private Class<?> resolveGenericType(Type type) {
+        if(!(type instanceof ParameterizedType parameterizedType))
+            throw new IllegalStateException("List injection requires generic type information");
+
+        Type actuallyType = parameterizedType.getActualTypeArguments()[0];
+
+        if(!(actuallyType instanceof Class<?> clazz))
+            throw new IllegalStateException("Unsupported generic type: " + actuallyType);
+
+        return clazz;
     }
 }
