@@ -12,7 +12,7 @@ import org.example.framework.context.MyApplicationContext;
  * <br>
  * {@see <a href="https://docs.spring.io/spring-framework/docs/5.3.22/javadoc-api/org/springframework/context/ApplicationContext.html">공식문서</a>}
  */
-public interface ApplicationContext {
+public interface ApplicationContext extends BeanFactory, ListableBeanFactory{
 
     /**
      * 애플리케이션 이름을 반환한다.
@@ -44,20 +44,4 @@ public interface ApplicationContext {
      * @return 컨텍스트 시작 시각 (epoch millisecond)
      */
     long getStartupDate();
-
-    /**
-     * 지정된 이름의 Bean을 {@link BeanFactory}에서 반환한다.
-     * @param requiredType 찾을 Bean 타입
-     * @param <T>          반환 타입
-     * @return Bean 인스턴스
-     */
-    <T> T getBean(Class<T> requiredType);
-
-    /**
-     * 지정된 이름의 Bean을 {@link BeanFactory}에서 반환한다.
-     *
-     * @param beanName Bean 이름
-     * @return Bean 인스턴스
-     */
-    Object getBean(String beanName);
 }
