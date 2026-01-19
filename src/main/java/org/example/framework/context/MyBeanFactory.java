@@ -4,6 +4,7 @@ import org.example.framework.annotation.Autowired;
 import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.core.DependencyInjector;
+import org.example.framework.core.ListableBeanFactory;
 import org.example.framework.exception.bean.BeanCreationException;
 import org.example.framework.exception.bean.CircularDependencyException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
@@ -14,7 +15,7 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MyBeanFactory implements BeanFactory {
+public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
 
     private final DependencyInjector injector;
     private final BeanDefinitionRegistry registry;
@@ -139,12 +140,15 @@ public class MyBeanFactory implements BeanFactory {
      * @param type 조회 대상 Bean 타입
      * @return 해당 타입에 할당 가능한 모든 Bean 리스트
      */
-    public List<Object> getBeansOfType(Class<?> type) {
-        List<Object> result = new ArrayList<>();
+    @Override
+    public <T> List<T> getBeansOfType(Class<T> type) {
+        List<T> result = new ArrayList<>();
 
         for(BeanDefinition def : registry.getBeanDefinitions()) {
-            if(type.isAssignableFrom(def.getBeanClass()))
-                result.add(getBean(def.getBeanName()));
+            if(type.isAssignableFrom(def.getBeanClass())) {
+                Object bean = getBean((def.getBeanName()));
+                result.add(type.cast(bean));
+            }
         }
 
         return result;

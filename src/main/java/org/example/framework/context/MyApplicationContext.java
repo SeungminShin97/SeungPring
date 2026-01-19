@@ -4,6 +4,7 @@ import org.example.framework.annotation.Scope;
 import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.core.ComponentScanner;
+import org.example.framework.core.ListableBeanFactory;
 import org.example.framework.exception.ComponentScanException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,8 @@ public class MyApplicationContext extends AbstractApplicationContext {
     private static final Logger log = LoggerFactory.getLogger(MyApplicationContext.class);
 
     private final BeanDefinitionRegistry registry;
-    private final BeanFactory factory;
+    private final BeanFactory beanFactory;
+    private final ListableBeanFactory listableBeanFactory;
     private final ComponentScanner scanner;
     // scan 대상 경로들
     private final String[] basePackages;
@@ -51,7 +53,10 @@ public class MyApplicationContext extends AbstractApplicationContext {
      */
     public MyApplicationContext(String... basePackages) {
         this.registry = new MyBeanDefinitionRegistry();
-        this.factory = new MyBeanFactory(new MyDependencyInjector(), registry);
+
+        MyBeanFactory factory = new MyBeanFactory(new MyDependencyInjector(), registry);
+        this.beanFactory = factory;
+        this.listableBeanFactory = factory;
         this.scanner = new MyComponentScanner();
         this.basePackages = basePackages;
 
@@ -141,13 +146,24 @@ public class MyApplicationContext extends AbstractApplicationContext {
         register(new HashSet<>(List.of(components)));
     }
 
+    @Override
+    public boolean containsBean(String name) {
+        return beanFactory.containsBean(name);
+    }
+
     /**
      * 해당 이름의 bean 인스턴스가 생성됐는지 확인한다.
      * @param beanName 조회할 bean 이름
      * @return 존재하면 true, 아니면 false
      */
-    boolean containsSingleton(String beanName) {
-        return factory.containsSingleton(beanName);
+    @Override
+    public boolean containsSingleton(String beanName) {
+        return beanFactory.containsSingleton(beanName);
+    }
+
+    @Override
+    public String[] getAliases(String name) {
+        return beanFactory.getAliases(name);
     }
 
     /**
@@ -170,7 +186,7 @@ public class MyApplicationContext extends AbstractApplicationContext {
      */
     @Override
     public <T> T getBean(Class<T> requiredType) {
-        return factory.getBean(requiredType);
+        return beanFactory.getBean(requiredType);
     }
 
     /**
@@ -182,6 +198,31 @@ public class MyApplicationContext extends AbstractApplicationContext {
      */
     @Override
     public Object getBean(String beanName) {
-        return factory.getBean(beanName);
+        return beanFactory.getBean(beanName);
+    }
+
+    @Override
+    public Class<?> getType(String name) {
+        return beanFactory.getType(name);
+    }
+
+    @Override
+    public boolean isPrototype(String name) {
+        return beanFactory.isPrototype(name);
+    }
+
+    @Override
+    public boolean isSingleton(String name) {
+        return beanFactory.isSingleton(name);
+    }
+
+    @Override
+    public boolean isTypeMatch(String name, Class<?> typeToMatch) {
+        return beanFactory.isTypeMatch(name, typeToMatch);
+    }
+
+    @Override
+    public <T> List<T> getBeansOfType(Class<T> type) {
+        return listableBeanFactory.getBeansOfType(type);
     }
 }
