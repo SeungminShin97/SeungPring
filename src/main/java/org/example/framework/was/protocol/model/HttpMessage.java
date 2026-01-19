@@ -24,7 +24,7 @@ public class HttpMessage {
     protected final HttpHeader header;
 
     /** HTTP 바디 */
-    protected final HttpBody body;
+    protected HttpBody body;
 
     protected HttpMessage(HttpProtocolVersion version, HttpHeader header, HttpBody body) {
         this.version = version;

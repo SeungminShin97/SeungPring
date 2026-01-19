@@ -2,6 +2,8 @@ package org.example.framework.was.protocol.model;
 
 import org.example.framework.was.protocol.HttpProtocolVersion;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * HTTP 응답 정보를 표현하는 클래스.
  * <p>
@@ -15,7 +17,7 @@ import org.example.framework.was.protocol.HttpProtocolVersion;
 public class HttpResponse extends HttpMessage{
 
     /** HTTP 상태 */
-    private final HttpStatus httpStatus;
+    private HttpStatus httpStatus;
 
     public HttpResponse(HttpHeader header, HttpBody body, HttpProtocolVersion version, HttpStatus httpStatus) {
         super(version, header,body);
@@ -32,5 +34,15 @@ public class HttpResponse extends HttpMessage{
 
     public String getReason() {
         return httpStatus.reason();
+    }
+
+    public void setStatus(HttpStatus status) {
+        this.httpStatus = status;
+    }
+
+    public void writeBody(String content) {
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+        super.body = new HttpBody(bytes);
+        super.header.setContentLength(bytes.length);
     }
 }

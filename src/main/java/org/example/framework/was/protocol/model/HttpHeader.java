@@ -35,6 +35,14 @@ public class HttpHeader {
         list.add(trimmedValue);
     }
 
+    protected void setContentLength(int length) {
+        put("Content-Length", Integer.toString(length));
+    }
+
+    protected void setContentType(String value) {
+        put("Content-Type", value);
+    }
+
 
     /**
      * 지정한 헤더 이름에 해당하는 모든 값을 반환한다.
