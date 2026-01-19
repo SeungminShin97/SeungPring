@@ -4,6 +4,8 @@ import org.example.framework.annotation.Autowired;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.core.DependencyInjector;
 
+import static org.example.framework.util.AnnotationUtils.hasAnnotation;
+
 import java.beans.Introspector;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -22,7 +24,7 @@ public class MyDependencyInjector implements DependencyInjector {
     public void inject(Object target, BeanFactory beanFactory) {
         // getDeclaredFields : 현재 클래스의 모든 필드(public, protected, private) / 부모 클래스 필드는 제외
         for(Field field : target.getClass().getDeclaredFields()) {
-            if(!field.isAnnotationPresent(Autowired.class)) continue;
+            if (!hasAnnotation(field, Autowired.class)) continue;
 
             // final 필드의 경우 생성자 주입
             if(Modifier.isFinal(field.getModifiers())) continue;

@@ -5,12 +5,11 @@ import org.example.framework.core.ComponentScanner;
 import org.example.framework.exception.ComponentScanException;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import static org.example.framework.util.AnnotationUtils.hasAnnotation;
 
 /**
  * 지정된 패키지 경로에서 @Component 어노테이션이 붙은 클래스를 탐색하는 유틸리티
@@ -59,7 +58,7 @@ public class MyComponentScanner implements ComponentScanner {
             } else if (file.getName().endsWith(".class")) {
                 String className = packageName + "." + file.getName().replace(".class", "");
                 Class<?> clazz = loader.loadClass(className);
-                if (clazz.isAnnotationPresent(Component.class)) {
+                if (hasAnnotation(clazz, Component.class)) {
                     components.add(clazz);
                 }
             }

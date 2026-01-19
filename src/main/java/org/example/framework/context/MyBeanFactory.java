@@ -15,6 +15,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.example.framework.util.AnnotationUtils.hasAnnotation;
+
 public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
 
     private final DependencyInjector injector;
@@ -312,7 +314,7 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
         // Autowired 생성자 추출
         List<Constructor<?>> autowiredConstructor =
                 Arrays.stream(constructors)
-                        .filter(t -> t.isAnnotationPresent(Autowired.class))
+                        .filter(c -> hasAnnotation(c, Autowired.class))
                         .toList();
 
         // Autowired 생성자 2개 이상일 경우 예외 발생

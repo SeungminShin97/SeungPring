@@ -13,6 +13,8 @@ import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
+import static org.example.framework.util.AnnotationUtils.hasAnnotation;
+
 // TODO: eager init 기능 구현
 
 /**
@@ -60,9 +62,6 @@ public class MyApplicationContext extends AbstractApplicationContext {
         this.listableBeanFactory = factory;
         this.scanner = new MyComponentScanner();
         this.basePackages = basePackages;
-
-        // 컨택스트 초기화
-        refresh();
     }
 
     /**
@@ -138,8 +137,10 @@ public class MyApplicationContext extends AbstractApplicationContext {
             ScopeType scopeType = ScopeType.SINGLETON;
 
             // 클래스에 @Scope 어노테이션이 붙어 있으면 값 추출
-            if (clazz.isAnnotationPresent(Scope.class))
-                scopeType = clazz.getAnnotation(Scope.class).value();
+            if (hasAnnotation(clazz, Scope.class)) {
+                Scope scope = clazz.getAnnotation(Scope.class);
+                scopeType = scope.value();
+            }
 
             // Bean 메타정보(클래스, 이름, 스코프)를 담은 BeanDefinition 생성
             BeanDefinition beanDefinition = new BeanDefinition(clazz, beanName, scopeType);
@@ -235,7 +236,7 @@ public class MyApplicationContext extends AbstractApplicationContext {
             BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);
 
             Class<?> beanClass = beanDefinition.getBeanClass();
-            if(beanClass.isAnnotationPresent(annotationType))
+            if(hasAnnotation(beanClass, annotationType))
                 result.put(beanName, getBean(beanName));
         }
 
