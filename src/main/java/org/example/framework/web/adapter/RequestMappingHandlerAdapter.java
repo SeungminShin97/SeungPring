@@ -1,5 +1,6 @@
 package org.example.framework.web.adapter;
 
+import org.example.framework.annotation.Component;
 import org.example.framework.was.protocol.model.HttpRequest;
 import org.example.framework.was.protocol.model.HttpResponse;
 import org.example.framework.web.HandlerMethod;
@@ -14,6 +15,7 @@ import java.lang.reflect.Method;
  * <p>리플렉션을 사용하여 컨트롤러 메서드를 호출하며,
  * 최소한의 파라미터 바인딩과 반환값 처리를 지원한다.</p>
  */
+@Component
 public class RequestMappingHandlerAdapter implements HandlerAdapter{
 
     @Override

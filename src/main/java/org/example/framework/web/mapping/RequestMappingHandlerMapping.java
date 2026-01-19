@@ -1,5 +1,6 @@
 package org.example.framework.web.mapping;
 
+import org.example.framework.annotation.Component;
 import org.example.framework.annotation.Controller;
 import org.example.framework.annotation.RequestMapping;
 import org.example.framework.core.ApplicationContext;
@@ -20,6 +21,7 @@ import java.util.Map;
  * <p>매핑 정보는 컨텍스트 초기화 시점에 한 번 수집되며,
  * 요청 처리 시에는 캐시된 정보를 기반으로 빠르게 Handler를 조회한다.</p>
  */
+@Component
 public class RequestMappingHandlerMapping implements HandlerMapping{
 
     private final Map<RequestMappingInfo, HandlerMethod> handlerMethods = new HashMap<>();
