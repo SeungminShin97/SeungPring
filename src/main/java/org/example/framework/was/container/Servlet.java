@@ -29,6 +29,16 @@ import org.example.framework.was.protocol.model.HttpResponse;
 public interface Servlet {
 
     /**
+     * 서블릿 인스턴스 초기화를 수행합니다.
+     *
+     * <p>
+     * 이 메서드는 WAS(ServletContainer)에 의해
+     * 서블릿 등록 이후 단 한 번 호출됩니다.
+     * </p>
+     */
+    default void init() throws Exception {}
+
+    /**
      * 단일 HTTP 요청에 대한 처리를 수행합니다.
      *
      * <p>
@@ -43,4 +53,9 @@ public interface Servlet {
      * @throws Exception 서블릿 처리 중 발생하는 모든 예외
      */
     void service(HttpRequest request, HttpResponse response) throws Exception;
+
+    /**
+     * 서블릿 종료 시 리소스 정리를 수행합니다.
+     */
+    default void destroy() throws Exception {}
 }
