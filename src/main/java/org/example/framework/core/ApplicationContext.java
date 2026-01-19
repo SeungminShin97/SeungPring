@@ -2,6 +2,9 @@ package org.example.framework.core;
 
 import org.example.framework.context.MyApplicationContext;
 
+import java.lang.annotation.Annotation;
+import java.util.Map;
+
 /**
  * {@link ApplicationContext}는 애플리케이션 전체 컨텍스트를 대표하는 인터페이스다.
  * <br>
@@ -44,4 +47,12 @@ public interface ApplicationContext extends BeanFactory, ListableBeanFactory{
      * @return 컨텍스트 시작 시각 (epoch millisecond)
      */
     long getStartupDate();
+
+    /**
+     * 해당 Bean의 어노테이션 리스트를 반환한다.
+     *
+     * @param annotationType 조회할 어노테이션 타입
+     * @return 어노테이션 리스트
+     */
+    Map<String, Object> getBeansWithAnnotation(Class<? extends Annotation> annotationType);
 }

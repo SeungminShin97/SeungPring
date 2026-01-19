@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.beans.Introspector;
+import java.lang.annotation.Annotation;
 import java.util.*;
 
 // TODO: eager init 기능 구현
@@ -62,6 +63,17 @@ public class MyApplicationContext extends AbstractApplicationContext {
 
         // 컨택스트 초기화
         refresh();
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>컴포넌트 스캔과 BeanDefinition 등록을 수행한다.
+     * BeanFactory 초기화나 Bean 생성을 추가하려면 이 메서드를 확장하면 된다.</p>
+     */
+    @Override
+    protected void refreshBeanFactory() {
+        Set<Class<?>> components = doScan(this.scanner, this.basePackages);
+        register(components);
     }
 
     /**
@@ -146,37 +158,6 @@ public class MyApplicationContext extends AbstractApplicationContext {
         register(new HashSet<>(List.of(components)));
     }
 
-    @Override
-    public boolean containsBean(String name) {
-        return beanFactory.containsBean(name);
-    }
-
-    /**
-     * 해당 이름의 bean 인스턴스가 생성됐는지 확인한다.
-     * @param beanName 조회할 bean 이름
-     * @return 존재하면 true, 아니면 false
-     */
-    @Override
-    public boolean containsSingleton(String beanName) {
-        return beanFactory.containsSingleton(beanName);
-    }
-
-    @Override
-    public String[] getAliases(String name) {
-        return beanFactory.getAliases(name);
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>컴포넌트 스캔과 BeanDefinition 등록을 수행한다.
-     * BeanFactory 초기화나 Bean 생성을 추가하려면 이 메서드를 확장하면 된다.</p>
-     */
-    @Override
-    protected void refreshBeanFactory() {
-        Set<Class<?>> components = doScan(this.scanner, this.basePackages);
-        register(components);
-    }
-
     /**
      * {@inheritDoc}
      * <p>Bean 이름 대신 타입으로 Bean을 조회한다.</p>
@@ -202,6 +183,26 @@ public class MyApplicationContext extends AbstractApplicationContext {
     }
 
     @Override
+    public boolean containsBean(String name) {
+        return beanFactory.containsBean(name);
+    }
+
+    /**
+     * 해당 이름의 bean 인스턴스가 생성됐는지 확인한다.
+     * @param beanName 조회할 bean 이름
+     * @return 존재하면 true, 아니면 false
+     */
+    @Override
+    public boolean containsSingleton(String beanName) {
+        return beanFactory.containsSingleton(beanName);
+    }
+
+    @Override
+    public String[] getAliases(String name) {
+        return beanFactory.getAliases(name);
+    }
+
+    @Override
     public Class<?> getType(String name) {
         return beanFactory.getType(name);
     }
@@ -224,5 +225,20 @@ public class MyApplicationContext extends AbstractApplicationContext {
     @Override
     public <T> List<T> getBeansOfType(Class<T> type) {
         return listableBeanFactory.getBeansOfType(type);
+    }
+
+    @Override
+    public Map<String, Object> getBeansWithAnnotation(Class<? extends Annotation> annotationType) {
+        Map<String, Object> result = new HashMap<>();
+
+        for(String beanName : registry.getBeanDefinitionNames()) {
+            BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);
+
+            Class<?> beanClass = beanDefinition.getBeanClass();
+            if(beanClass.isAnnotationPresent(annotationType))
+                result.put(beanName, getBean(beanName));
+        }
+
+        return result;
     }
 }
