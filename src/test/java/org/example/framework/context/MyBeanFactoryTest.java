@@ -1,7 +1,10 @@
 package org.example.framework.context;
 
+import org.example.framework.annotation.Autowired;
 import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
+import org.example.framework.exception.bean.BeanCreationException;
+import org.example.framework.exception.bean.CircularDependencyException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 import org.example.test.DummyBean;
 import org.example.test.DummyChildService;
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.security.Principal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,6 +29,37 @@ class MyBeanFactoryTest {
     private BeanFactory factory;
     private BeanDefinitionRegistry registry;
 
+    static class MultiAutowiredConstructorBean {
+        @Autowired
+        public MultiAutowiredConstructorBean(DummyService a) {}
+
+        @Autowired
+        public MultiAutowiredConstructorBean(DummyService a, DummyService b) {}
+    }
+
+    static class ListInjectionBean {
+        private final List<DummyService> services;
+
+        @Autowired
+        public ListInjectionBean(List<DummyService> services) {
+            this.services = services;
+        }
+
+        int size() {
+            return services.size();
+        }
+    }
+
+    static class A {
+        @Autowired
+        public A(B b) {}
+    }
+
+    static class B {
+        @Autowired
+        public B(A a) {}
+    }
+
     @BeforeEach
     void given() {
         registry = new MyBeanDefinitionRegistry();
@@ -35,84 +70,41 @@ class MyBeanFactoryTest {
     }
 
     @Nested
-    @DisplayName("getBean() 테스트")
+    @DisplayName("getBean(String beanName) 테스트")
     class GetBeanTests {
-
-        @Nested
-        @DisplayName("getBean(Class<T> requiredType) 테스트")
-        class GetBeanByTypeTests {
-            @Test
-            @DisplayName("존재하지 않는 bean인 경우 NoSuchBeanDefinitionException 예외 발생")
-            void should_Throw_When_Bean_Not_Exist() {
-                // when
-                // then
-                assertThrows(NoSuchBeanDefinitionException.class,
-                        () -> factory.getBean("IllegalBeanName"));
-            }
-
-            @Test
-            @DisplayName("bean 이름으로 인스턴스를 조회할 수 있다")
-            void should_Return_Bean_When_BeanName_Given() {
-                // when
-                Object bean = factory.getBean(DUMMY_SERVICE);
-
-                // then
-                assertNotNull(bean);
-                assertInstanceOf(DummyService.class, bean);
-            }
-
-            @Test
-            @DisplayName("생성되지 않은 bean은 생성 후 캐시에 저장되어야 한다")
-            void should_Create_And_Cache_Bean_If_Not_Exist() {
-                // when
-                Object first = factory.getBean(DUMMY_CONTROLLER);
-                Object second = factory.getBean(DUMMY_CONTROLLER);
-
-                // then
-                assertNotNull(first);
-                assertSame(first, second);
-                assertEquals(DummyController.class, first.getClass());
-            }
+        @Test
+        @DisplayName("존재하지 않는 bean인 경우 NoSuchBeanDefinitionException 예외 발생")
+        void should_Throw_When_Bean_Not_Exist() {
+            // when
+            // then
+            assertThrows(NoSuchBeanDefinitionException.class,
+                    () -> factory.getBean("IllegalBeanName"));
         }
 
-        @Nested
-        @DisplayName("getBean(String beanName) 테스트")
-        class GetBeanByNameTests {
-            @Test
-            @DisplayName("존재하지 않는 bean인 경우 NoSuchBeanDefinitionException 예외 발생")
-            void should_Throw_When_Bean_Not_Exist() {
-                // when
-                // then
-                assertThrows(NoSuchBeanDefinitionException.class,
-                        () -> factory.getBean(MyBeanFactory.class));
-            }
+        @Test
+        @DisplayName("bean 이름으로 인스턴스를 조회할 수 있다")
+        void should_Return_Bean_When_BeanName_Given() {
+            // when
+            Object bean = factory.getBean(DUMMY_SERVICE);
 
-            @Test
-            @DisplayName("bean 타입으로 인스턴스를 조회할 수 있다")
-            void should_Return_Bean_When_Type_Given() {
-                // when
-                DummyService bean = factory.getBean(DummyService.class);
+            // then
+            assertNotNull(bean);
+            assertInstanceOf(DummyService.class, bean);
+        }
 
-                // then
-                assertNotNull(bean);
-                assertInstanceOf(DummyService.class, bean);
-            }
+        @Test
+        @DisplayName("생성되지 않은 bean은 생성 후 캐시에 저장되어야 한다")
+        void should_Create_And_Cache_Bean_If_Not_Exist() {
+            // when
+            Object first = factory.getBean(DUMMY_CONTROLLER);
+            Object second = factory.getBean(DUMMY_CONTROLLER);
 
-            @Test
-            @DisplayName("생성되지 않은 bean은 생성 후 캐시에 저장되어야 한다")
-            void should_Create_And_Cache_Bean_If_Not_Exist() {
-                // when
-                Object first = factory.getBean(DUMMY_CONTROLLER);
-                Object second = factory.getBean(DUMMY_CONTROLLER);
-
-                // then
-                assertNotNull(first);
-                assertSame(first, second);
-                assertEquals(DummyController.class, first.getClass());
-            }
+            // then
+            assertNotNull(first);
+            assertSame(first, second);
+            assertEquals(DummyController.class, first.getClass());
         }
     }
-
 
     @Test
     @DisplayName("Bean이 정상적으로 생성되고 캐시에 저장되어야 한다")
@@ -166,6 +158,18 @@ class MyBeanFactoryTest {
             assertNotNull(clazz);
             assertEquals(DummyController.class, clazz);
         }
+
+        @Test
+        @DisplayName("아직 생성되지 않은 prototype bean도 타입 조회는 가능하다")
+        void should_Return_Type_For_Prototype_Before_Creation() {
+            registry.registerBeanDefinition("proto",
+                    new BeanDefinition(DummyController.class, "proto", ScopeType.PROTOTYPE));
+
+            Class<?> type = factory.getType("proto");
+
+            assertEquals(DummyController.class, type);
+        }
+
     }
 
     @Nested
@@ -177,7 +181,7 @@ class MyBeanFactoryTest {
             // when
             // then
             assertThrows(NoSuchBeanDefinitionException.class,
-                    () -> factory.getBean("IllegalClass"));
+                    () -> factory.getBean("IllegalBeanName"));
         }
 
         @Test
@@ -211,7 +215,7 @@ class MyBeanFactoryTest {
             // when
             // then
             assertThrows(NoSuchBeanDefinitionException.class,
-                    () -> factory.getBean("IllegalClass"));
+                    () -> factory.getBean("IllegalBeanName"));
         }
 
         @Test
@@ -275,5 +279,40 @@ class MyBeanFactoryTest {
             assertFalse(factory.isTypeMatch(DUMMY_SERVICE, DummyController.class));
             assertFalse(factory.isTypeMatch(DUMMY_SERVICE, DummyChildService.class));
         }
+    }
+
+    @Test
+    @DisplayName("@Autowired 생성자가 둘 이상이면 예외가 발생한다")
+    void should_Throw_When_Multiple_Autowired_Constructors() {
+        registry.registerBeanDefinition("multi",
+                new BeanDefinition(MultiAutowiredConstructorBean.class, ScopeType.SINGLETON));
+
+        assertThrows(BeanCreationException.class,
+                () -> factory.getBean("multi"));
+    }
+
+    @Test
+    @DisplayName("List<T> 생성자 파라미터에는 해당 타입의 모든 하위 Bean이 주입된다")
+    void should_Inject_List_Of_Beans() {
+        registry.registerBeanDefinition("s1",
+                new BeanDefinition(DummyService.class, "s1"));
+        registry.registerBeanDefinition("s2",
+                new BeanDefinition(DummyService.class, "s2"));
+
+        registry.registerBeanDefinition("listBean",
+                new BeanDefinition(ListInjectionBean.class, "listBean"));
+
+        ListInjectionBean bean = factory.getBean(ListInjectionBean.class);
+
+        assertEquals(3, bean.size());
+    }
+
+    @Test
+    @DisplayName("순환 참조가 발생하면 CircularDependencyException이 발생한다")
+    void should_Throw_When_Circular_Dependency() {
+        registry.registerBeanDefinition("a", new BeanDefinition(A.class, "a"));
+        registry.registerBeanDefinition("b", new BeanDefinition(B.class, "b"));
+
+        assertThrows(BeanCreationException.class, () -> factory.getBean("a"));
     }
 }

@@ -11,28 +11,15 @@ class HeaderNameFormatterTest {
     @Test
     @DisplayName("null 값이 주어지면 빈 문자열을 반환해야 한다")
     void should_return_empty_string_when_null_is_given() {
-        // given
-        String result;
-        
-        // when
-        result = toTitleCase(null);
-        
-        // then
-        assertEquals("", result);
+
+        assertEquals("", toTitleCase(null));
     }
     
     @Test
     @DisplayName("빈 문자열이 주어지면 빈 문자열을 반환해야 한다")
     void should_return_empty_string_when_empty_string_is_given() {
-        // given
-        String given = "";
-        String result;
-        
-        // when
-        result = toTitleCase(given);
-        
-        // then
-        assertEquals("", result);
+
+        assertEquals("", toTitleCase(""));
     }
     
     @Test
@@ -41,10 +28,10 @@ class HeaderNameFormatterTest {
         // given
         // when
         // then
-        assertEquals("Content-Type", HeaderNameFormatter.toTitleCase("content-type"));
-        assertEquals("X-Custom-Header", HeaderNameFormatter.toTitleCase("x-custom-header"));
-        assertEquals("Host", HeaderNameFormatter.toTitleCase("HOST"));
-        assertEquals("Content-Length", HeaderNameFormatter.toTitleCase("CoNteNT-LeNGTH"));
-        assertEquals("A--B", HeaderNameFormatter.toTitleCase("a--b"));
+        assertEquals("Content-Type", toTitleCase("content-type"));
+        assertEquals("X-Custom-Header", toTitleCase("x-custom-header"));
+        assertEquals("Host", toTitleCase("HOST"));
+        assertEquals("Content-Length", toTitleCase("CoNteNT-LeNGTH"));
+        assertEquals("A--B", toTitleCase("a--b"));
     }
 }

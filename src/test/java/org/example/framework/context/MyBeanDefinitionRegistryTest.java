@@ -1,11 +1,13 @@
 package org.example.framework.context;
 
-import org.example.framework.exception.bean.BeanException;
+import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 import org.example.test.DummyService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -76,8 +78,10 @@ class MyBeanDefinitionRegistryTest {
         BeanDefinition bean = createDummyBeanDefinition("test1", DummyService.class);
 
         //When & Then
-        assertThrows(NullPointerException.class, () -> registry.registerBeanDefinition(null, bean));
+        NullPointerException e = assertThrows(NullPointerException.class, () -> registry.registerBeanDefinition(null, bean));
         assertEquals(0, registry.getBeanDefinitionCount());
+
+        assertEquals("BeanName is null", e.getMessage());
     }
 
     @Test
@@ -110,17 +114,20 @@ class MyBeanDefinitionRegistryTest {
         // When
         // Then
         assertEquals(0, registry.getBeanDefinitionCount());
-        assertThrows(BeanException.class, () -> registry.getBeanDefinition("test"));
+        assertThrows(NoSuchBeanDefinitionException.class, () -> registry.getBeanDefinition("test"));
     }
 
     @Test
-    void getBeanDefinitionNames_emptyMap_shouldReturnEmptyList() {
-        // Given
-        // When
-        // Then
-        assertEquals(0, registry.getBeanDefinitionCount());
-        assertSame(ArrayList.class, registry.getBeanDefinitionNames().getClass());
-        assertEquals(0, registry.getBeanDefinitionNames().size());
+    @DisplayName("getBeanDefinitionNames는 내부 상태를 보호하기 위해 복사본을 반환한다")
+    void getBeanDefinitionNames_shouldReturnDefensiveCopy() {
+        BeanDefinition bean = createDummyBeanDefinition("test", DummyService.class);
+        registry.registerBeanDefinition("test", bean);
+
+        List<String> names = registry.getBeanDefinitionNames();
+        names.add("hacked");
+
+        assertEquals(1, registry.getBeanDefinitionCount());
+        assertFalse(registry.containsBeanDefinition("hacked"));
     }
 
     @Test
