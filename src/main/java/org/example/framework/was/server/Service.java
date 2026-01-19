@@ -1,30 +1,28 @@
 package org.example.framework.was.server;
 
 import org.example.framework.was.container.ServletContainer;
+import org.example.framework.was.protocol.model.HttpRequest;
+import org.example.framework.was.protocol.model.HttpResponse;
 
 /**
- * WAS 내부에서 <strong>Connector와 Servlet Container를 연결하는 논리적 서비스 단위</strong>입니다.
+ * WAS 내부에서 Connector 계층과 {@link ServletContainer}를 연결하는
+ * 논리적 서비스 계층이다.
  *
  * <p>
- * 이 클래스는 요청 처리 흐름 상
- * <strong>Connector 계층과 Container 계층 사이의 결합 지점</strong>을 담당합니다.
- * Connector는 직접 Container 구현을 알지 않으며,
- * 반드시 Service를 통해 Container에 접근합니다.
+ * Connector는 Service를 통해서만 Container에 접근하며,
+ * 이를 통해 네트워크 계층과 서블릿 실행 계층 간의
+ * 의존성을 분리한다.
  * </p>
  *
  * <p>
- * 본 설계는 Tomcat의 {@code Service} / {@code StandardService} 구조를 참고하였으며,
- * Connector ↔ Container 사이의 중간 계층을 두어
- * 역할 분리와 구조적 확장 가능성을 확보하는 것을 목표로 합니다.
+ * Service는 향후 필터 체인, 공통 정책 처리 등과 같은
+ * 요청 전·후 처리 확장을 위한 진입 지점으로 사용될 수 있다.
  * </p>
  *
  * @see ServletContainer
  * @see <a href="https://github.com/apache/tomcat/blob/main/java/org/apache/catalina/Service.java">
  *      Apache Tomcat Service Interface
  *      </a>
- * @see <a href="https://github.com/apache/tomcat/blob/main/java/org/apache/catalina/core/StandardService.java">
- *      Apache Tomcat StandardService Implementation
- *      </a
  */
 public class Service {
 
@@ -43,6 +41,14 @@ public class Service {
      */
     public Service(ServletContainer container) {
         this.container = container;
+    }
+
+    /**
+     * Connector 계층에서 전달된 요청을
+     * 연결된 {@link ServletContainer}로 위임한다.
+     */
+    public void handle(HttpRequest request, HttpResponse response) throws Exception {
+        container.service(request, response);
     }
 
     /**
