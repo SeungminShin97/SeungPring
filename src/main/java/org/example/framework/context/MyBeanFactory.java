@@ -20,8 +20,10 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
     private final DependencyInjector injector;
     private final BeanDefinitionRegistry registry;
 
-    /** Cache of singleton objects: bean name --> bean instance */
-    private final Map<String, Object> singletonObjects = new HashMap<>();
+    /**
+     * Cache of singleton objects: bean name --> bean instance
+     */
+    private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>();
 
     private final Set<String> inCreation = ConcurrentHashMap.newKeySet();
 
@@ -95,26 +97,22 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
      */
     @Override
     public Object getBean(String beanName) {
-        if(containsSingleton(beanName))
-            return singletonObjects.get(beanName);
+        BeanDefinition beanDefinition = getBeanDefinitionOrThrow(beanName);
 
-        // 순환참조 방지
-        if(inCreation.contains(beanName))
-            throw new CircularDependencyException(beanName);
+        if (!beanDefinition.isSingleton())
+            return createBean(beanDefinition);
 
-        try{
-            inCreation.add(beanName);
+        return singletonObjects.computeIfAbsent(beanName, name -> {
+            if (inCreation.contains(name))
+                throw new CircularDependencyException(name);
 
-            // 등록된 Bean 이 없으면 생성
-            BeanDefinition beanDefinition = getBeanDefinitionOrThrow(beanName);
-            Object obj = createBean(beanDefinition);
-
-            if(beanDefinition.isSingleton())
-                singletonObjects.put(beanName, obj);
-            return obj;
-        } finally {
-            inCreation.remove(beanName);
-        }
+            try {
+                inCreation.add(name);
+                return createBean(beanDefinition);
+            } finally {
+                inCreation.remove(name);
+            }
+        });
     }
 
     /**
