@@ -5,13 +5,14 @@ import org.example.framework.was.endpoint.BioEndpoint;
 import org.example.framework.was.protocol.HttpProtocolSelector;
 import org.example.framework.was.protocol.http.HttpProtocolHandlerFactory;
 import org.example.framework.was.server.Service;
+import org.example.server.LifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
-public class Connector {
+public class Connector implements LifeCycle {
 
     private static final Logger log = LoggerFactory.getLogger(Connector.class);
 
@@ -55,6 +56,7 @@ public class Connector {
      * 서버를 시작한다.
      * 내부 Endpoint.start() 호출만 수행.
      */
+    @Override
     public void start() {
         try {
             log.info("[Connector] Starting server on port {}", port);
@@ -67,6 +69,7 @@ public class Connector {
     /**
      * 서버를 중지한다.
      */
+    @Override
     public void stop() {
         try {
             log.info("[Connector] Stopping server on port {}", port);

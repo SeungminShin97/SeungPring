@@ -1,5 +1,6 @@
 package org.example.framework.was.endpoint;
 
+import org.example.server.LifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,7 @@ import java.net.InetSocketAddress;
  * @see <a href="https://github.com/apache/tomcat/blob/main/java/org/apache/tomcat/util/net/AbstractEndpoint.java">
  * Apache Tomcat AbstractEndpoint.java</a>
  */
-public abstract class AbstractEndpoint {
+public abstract class AbstractEndpoint implements LifeCycle {
     private final Logger log = LoggerFactory.getLogger(AbstractEndpoint.class);
 
     /** 수신 포트 */
@@ -70,6 +71,7 @@ public abstract class AbstractEndpoint {
      * 2. running 플래그를 true로 전환한 후
      * 3. Acceptor 스레드를 생성해 acceptLoop()를 실행한다.
      */
+    @Override
     public void start() throws IOException {
         bind();
         running = true;
@@ -94,6 +96,7 @@ public abstract class AbstractEndpoint {
      * running 플래그를 false로 바꾸고,
      * 소켓을 닫고, Acceptor 스레드를 인터럽트한다.
      */
+    @Override
     public void stop() throws IOException {
         running = false;
         close();
