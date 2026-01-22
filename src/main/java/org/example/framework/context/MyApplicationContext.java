@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 import static org.example.framework.util.AnnotationUtils.hasAnnotation;
@@ -130,6 +131,11 @@ public class MyApplicationContext extends AbstractApplicationContext {
      */
     public void register(Set<Class<?>> components) {
         for (Class<?> clazz : components) {
+
+            // Bean 생성 제외 규칙
+            if(clazz.isAnnotation() || clazz.isInterface() || clazz.isEnum() || Modifier.isAbstract(clazz.getModifiers()))
+                continue;
+
             // 클래스명에서 첫 글자 소문자로 변환하여 Bean 이름 생성
             String beanName = Introspector.decapitalize(clazz.getSimpleName());
 
