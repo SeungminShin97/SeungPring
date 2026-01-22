@@ -32,6 +32,10 @@ public final class AnnotationUtils {
                 return true;
             }
 
+            // Java 어노테이션 제외
+            if(currentType.getPackageName().startsWith("java.lang"))
+                continue;
+
             // 메타 어노테이션 재귀 탐색
             if (hasAnnotation(currentType.getAnnotations(), targetType, visited)) {
                 return true;
