@@ -36,6 +36,14 @@ public interface BeanDefinitionRegistry {
     BeanDefinition getBeanDefinition(String beanName);
 
     /**
+     * 지정된 이름의 {@link BeanDefinition}을 반홚한다.
+     *
+     * @param type 조회할 Bean의 타입
+     * @return 해당 {@link BeanDefinition}
+     */
+    BeanDefinition getBeanDefinition(Class<?> type);
+
+    /**
      * 현재 등록된 모든 Bean 이름을 반환한다.
      *
      * @return Bean 이름 목록

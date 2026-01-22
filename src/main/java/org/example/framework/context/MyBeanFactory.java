@@ -19,6 +19,25 @@ import static org.example.framework.util.AnnotationUtils.hasAnnotation;
 
 public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
 
+    private static class CreationStack {
+        private final ThreadLocal<Deque<String>> stack = ThreadLocal.withInitial(ArrayDeque::new);
+
+        void push(String beanName) {
+            if(stack.get().contains(beanName))
+                throw new CircularDependencyException(beanName);
+
+            stack.get().push(beanName);
+        }
+
+        void pop() {
+            stack.get().pop();
+        }
+
+        String current() {
+            return stack.get().peek();
+        }
+    }
+
     private final DependencyInjector injector;
     private final BeanDefinitionRegistry registry;
 
@@ -27,7 +46,7 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
      */
     private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>();
 
-    private final Set<String> inCreation = ConcurrentHashMap.newKeySet();
+    private final CreationStack creationStack = new CreationStack();
 
     public MyBeanFactory(DependencyInjector injector, BeanDefinitionRegistry registry) {
         this.injector = injector;
@@ -124,17 +143,12 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
         if (!beanDefinition.isSingleton())
             return createBean(beanDefinition);
 
-        return singletonObjects.computeIfAbsent(beanName, name -> {
-            if (inCreation.contains(name))
-                throw new CircularDependencyException(name);
-
-            try {
-                inCreation.add(name);
-                return createBean(beanDefinition);
-            } finally {
-                inCreation.remove(name);
-            }
-        });
+        creationStack.push(beanName);
+        try {
+            return singletonObjects.computeIfAbsent(beanName, name -> createBean(beanDefinition));
+        } finally {
+            creationStack.pop();
+        }
     }
 
     /**
