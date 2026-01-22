@@ -378,6 +378,15 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
         for(int i = 0; i < paramTypes.length; i++) {
             Class<?> paramType = paramTypes[i];
 
+            // Eager bean이 Lazy bean을 가지고 있을 경우 예외
+            String currentName = creationStack.current();
+            if(currentName != null) {
+                BeanDefinition currentBean = registry.getBeanDefinition(currentName);
+                BeanDefinition dependencyBean = registry.getBeanDefinition(paramType);
+                if(!currentBean.isLazyInit() && dependencyBean.isLazyInit())
+                    throw new IllegalStateException("Eager bean '" + currentBean.getBeanName() + "' cannot depend on lazy bean '" + dependencyBean.getBeanName() + "'");
+            }
+
             if(List.class.isAssignableFrom(paramType)) {
                 Class<?> genericType = resolveGenericType(genericTypes[i]);
                 args[i] = getBeansOfType(genericType);
@@ -389,6 +398,18 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
         return args;
     }
 
+    /**
+     * {@link List} 타입 의존성 주입을 위해
+     * 제네릭 파라미터 타입을 추출한다.
+     *
+     * <p>
+     * 예: {@code List<MyService>} → {@code MyService.class}
+     * </p>
+     *
+     * @param type 생성자 파라미터의 제네릭 타입 정보
+     * @return List에 선언된 실제 요소 타입
+     * @throws IllegalStateException 제네릭 정보가 없거나 지원하지 않는 경우
+     */
     private Class<?> resolveGenericType(Type type) {
         if(!(type instanceof ParameterizedType parameterizedType))
             throw new IllegalStateException("List injection requires generic type information");

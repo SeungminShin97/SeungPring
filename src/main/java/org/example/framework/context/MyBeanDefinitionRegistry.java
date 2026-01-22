@@ -44,6 +44,25 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
     }
 
     @Override
+    public BeanDefinition getBeanDefinition(Class<?> type) {
+        Objects.requireNonNull(type, "Type is null");
+
+        BeanDefinition found = null;
+
+        for(BeanDefinition beanDefinition : beanDefinitions.values()) {
+            if(beanDefinition.getBeanClass() == type) {
+                // 2개 이상의 후보 검색 시 예외처리
+                if(found != null)
+                    throw new IllegalStateException("Multiple beans found for type " + type.getName());
+                found = beanDefinition;
+            }
+        }
+        if(found == null)
+            throw new NoSuchBeanDefinitionException(type.getName());
+        return found;
+    }
+
+    @Override
     public List<String> getBeanDefinitionNames() {
         return new ArrayList<>(beanDefinitions.keySet());
     }

@@ -1,5 +1,6 @@
 package org.example.framework.context;
 
+import org.example.framework.annotation.Lazy;
 import org.example.framework.annotation.Scope;
 import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
@@ -15,7 +16,6 @@ import java.util.*;
 
 import static org.example.framework.util.AnnotationUtils.hasAnnotation;
 
-// TODO: eager init 기능 구현
 
 /**
  * <p>
@@ -73,6 +73,9 @@ public class MyApplicationContext extends AbstractApplicationContext {
     protected void refreshBeanFactory() {
         Set<Class<?>> components = doScan(this.scanner, this.basePackages);
         register(components);
+
+        // Eager Init
+        preInstantiateSingletons();
     }
 
     /**
@@ -142,8 +145,11 @@ public class MyApplicationContext extends AbstractApplicationContext {
                 scopeType = scope.value();
             }
 
+            // @Lazy 어노테이션 검사
+            boolean isLazyInit = hasAnnotation(clazz, Lazy.class);
+
             // Bean 메타정보(클래스, 이름, 스코프)를 담은 BeanDefinition 생성
-            BeanDefinition beanDefinition = new BeanDefinition(clazz, beanName, scopeType);
+            BeanDefinition beanDefinition = new BeanDefinition(clazz, beanName, scopeType, isLazyInit);
 
             // BeanDefinitionRegistry에 등록
             registry.registerBeanDefinition(beanName, beanDefinition);
@@ -241,5 +247,18 @@ public class MyApplicationContext extends AbstractApplicationContext {
         }
 
         return result;
+    }
+
+    /**
+     * Eager Init <br>
+     *
+     * Lazy 어노테이션이 붙지 않은 Singleton Scope bean 을 로드하는 메서드
+     */
+    private void preInstantiateSingletons() {
+        for(BeanDefinition definition : registry.getBeanDefinitions()) {
+            String beanName = definition.getBeanName();
+            if(definition.isSingleton() && !definition.isLazyInit())
+                getBean(beanName);
+        }
     }
 }
