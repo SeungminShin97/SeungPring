@@ -35,7 +35,7 @@ import org.example.framework.was.protocol.model.HttpResponse;
  *      Jakarta Servlet Specification - Servlet Interface
  *      </a>
  */
-public class ServletContainer {
+public class ServletContainer implements Servlet {
 
     private final Servlet servlet;
 
@@ -72,6 +72,7 @@ public class ServletContainer {
      * @param request WAS 레벨에서 파싱된 HTTP 요청 객체
      * @param response 처리 결과를 기록할 HTTP 응답 객체
      */
+    @Override
     public void service(HttpRequest request, HttpResponse response) throws Exception {
         servlet.service(request, response);
     }
