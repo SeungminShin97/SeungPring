@@ -4,6 +4,7 @@ import org.example.framework.annotation.Component;
 import org.example.framework.annotation.Controller;
 import org.example.framework.annotation.RequestMapping;
 import org.example.framework.core.ApplicationContext;
+import org.example.framework.core.lifecycle.ApplicationContextAware;
 import org.example.framework.was.protocol.model.HttpRequest;
 import org.example.framework.web.HandlerMethod;
 import org.example.framework.web.RequestMappingInfo;
@@ -24,9 +25,53 @@ import java.util.Map;
 @Component
 public class RequestMappingHandlerMapping implements HandlerMapping{
 
+    /**
+     * 요청 조건({@link RequestMappingInfo})과 실행 대상({@link HandlerMethod}) 간의
+     * 매핑 정보를 보관하는 내부 캐시이다.
+     *
+     * <p>
+     * 이 Map은 컨테이너 초기화 과정에서
+     * {@link #afterSingletonsInstantiated()} 단계에 한 번 채워지며,
+     * 이후 요청 처리 시에는 읽기 전용으로 사용된다.
+     * </p>
+     */
     private final Map<RequestMappingInfo, HandlerMethod> handlerMethods = new HashMap<>();
 
-    public RequestMappingHandlerMapping(ApplicationContext context) {
+    /**
+     * 컨테이너로부터 주입받은 {@link ApplicationContext}.
+     *
+     * <p>
+     * 이 필드는 {@link ApplicationContextAware} 콜백을 통해 설정되며,
+     * 모든 singleton Bean 생성이 완료된 이후 수행되는
+     * 초기화 단계에서 사용된다.
+     * </p>
+     */
+    private ApplicationContext context;
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * Bean 생성 및 의존성 주입 완료 이후,
+     * 컨테이너에 의해 호출되어 현재 {@link ApplicationContext}를 주입받는다.
+     * </p>
+     */
+    @Override
+    public void setApplicationContext(ApplicationContext context) {
+        this.context = context;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>
+     * 모든 singleton Bean 인스턴스 생성이 완료된 이후 호출되며,
+     * 컨트롤러 및 요청 매핑 정보를 수집하는
+     * 초기화 작업을 수행한다.
+     * </p>
+     */
+    @Override
+    public void afterSingletonsInstantiated() {
         initHandlerMethods(context);
     }
 

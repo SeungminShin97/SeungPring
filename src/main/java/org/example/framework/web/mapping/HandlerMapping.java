@@ -1,5 +1,7 @@
 package org.example.framework.web.mapping;
 
+import org.example.framework.core.lifecycle.ApplicationContextAware;
+import org.example.framework.core.lifecycle.SmartInitializingSingleton;
 import org.example.framework.was.protocol.model.HttpRequest;
 
 /**
@@ -10,7 +12,7 @@ import org.example.framework.was.protocol.model.HttpRequest;
  * 적절한 Handler를 탐색하며,
  * 매핑되지 않은 경우 {@code null}을 반환한다.</p>
  */
-public interface HandlerMapping {
+public interface HandlerMapping extends ApplicationContextAware, SmartInitializingSingleton {
 
     /**
      * 주어진 요청에 매핑되는 Handler를 반환한다.
