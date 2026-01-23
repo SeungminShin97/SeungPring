@@ -116,6 +116,7 @@ public abstract class AbstractApplicationContext implements ConfigurableApplicat
         active = false;
         closeBeanFactory();
         log.info("{} closed.", displayName);
+        closeBeanFactory();
     }
 
     /**

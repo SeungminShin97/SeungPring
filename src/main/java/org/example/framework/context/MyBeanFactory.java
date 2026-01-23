@@ -434,19 +434,21 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
         for(int i = 0; i < paramTypes.length; i++) {
             Class<?> paramType = paramTypes[i];
 
+            // List 주입 처리
+            if(List.class.isAssignableFrom(paramType)) {
+                Class<?> genericType = resolveGenericType(genericTypes[i]);
+                args[i] = getBeansOfType(genericType);
+                continue;
+            }
+
             // Eager bean이 Lazy bean을 가지고 있을 경우 예외
             String currentName = creationStack.current();
             if(currentName != null) {
                 BeanDefinition currentBean = registry.getBeanDefinition(currentName);
                 BeanDefinition dependencyBean = registry.getBeanDefinition(paramType);
                 if(!currentBean.isLazyInit() && dependencyBean.isLazyInit())
-                    throw new IllegalStateException("Eager bean '" + currentBean.getBeanName() + "' cannot depend on lazy bean '" + dependencyBean.getBeanName() + "'");
-            }
-
-            if(List.class.isAssignableFrom(paramType)) {
-                Class<?> genericType = resolveGenericType(genericTypes[i]);
-                args[i] = getBeansOfType(genericType);
-                continue;
+                    throw new IllegalStateException("Eager bean '" + currentBean.getBeanName() +
+                            "' cannot depend on lazy bean '" + dependencyBean.getBeanName() + "'");
             }
             args[i] = getBean(paramType);
         }
