@@ -2,10 +2,12 @@ package org.example.framework.context;
 
 import org.example.framework.annotation.Lazy;
 import org.example.framework.annotation.Scope;
-import org.example.framework.core.BeanDefinitionRegistry;
-import org.example.framework.core.BeanFactory;
-import org.example.framework.core.ComponentScanner;
-import org.example.framework.core.ListableBeanFactory;
+import org.example.framework.context.processor.ApplicationContextAwareProcessor;
+import org.example.framework.context.processor.InitializingBeanProcessor;
+import org.example.framework.context.processor.PostConstructProcessor;
+import org.example.framework.core.*;
+import org.example.framework.core.lifecycle.ApplicationContextAware;
+import org.example.framework.core.lifecycle.SmartInitializingSingleton;
 import org.example.framework.exception.ComponentScanException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +45,7 @@ public class MyApplicationContext extends AbstractApplicationContext {
     private static final Logger log = LoggerFactory.getLogger(MyApplicationContext.class);
 
     private final BeanDefinitionRegistry registry;
-    private final BeanFactory beanFactory;
+    private final ConfigurableBeanFactory beanFactory;
     private final ListableBeanFactory listableBeanFactory;
     private final ComponentScanner scanner;
     // scan 대상 경로들
@@ -51,7 +53,7 @@ public class MyApplicationContext extends AbstractApplicationContext {
 
     /**
      * 지정된 패키지를 스캔하여 컨텍스트를 초기화한다.
-     * <p>생성자 실행 시 {@link #refresh()}가 호출되어 스캔 및 BeanDefinition 등록이 자동 수행된다.</p>
+     * <p>생성자 실행 시 {@link org.example.framework.core.ConfigurableApplicationContext#refresh()}가 호출되어 스캔 및 BeanDefinition 등록이 자동 수행된다.</p>
      *
      * @param basePackages 컴포넌트 스캔 대상 패키지 목록
      */
@@ -63,6 +65,23 @@ public class MyApplicationContext extends AbstractApplicationContext {
         this.listableBeanFactory = factory;
         this.scanner = new MyComponentScanner();
         this.basePackages = basePackages;
+
+
+    }
+
+    @Override
+    protected void onRefresh() {
+        // 1. 컴포넌트 스캔 + BeanDefinition 등록
+        refreshBeanFactory();
+
+        // 2. BeanPostProcessor 등록
+        registerBeanPostProcessors();
+
+        // 3. Lazy 제외 singleton Bean 생성
+        preInstantiateSingletons();
+
+        // 4. singleton 전체 초기화 완료 후 콜백
+        invokeSmartInitializingSingletons();
     }
 
     /**
@@ -74,9 +93,11 @@ public class MyApplicationContext extends AbstractApplicationContext {
     protected void refreshBeanFactory() {
         Set<Class<?>> components = doScan(this.scanner, this.basePackages);
         register(components);
+    }
 
-        // Eager Init
-        preInstantiateSingletons();
+    @Override
+    protected void onClose() {
+        beanFactory.destroySingletons();
     }
 
     /**
@@ -265,6 +286,32 @@ public class MyApplicationContext extends AbstractApplicationContext {
             String beanName = definition.getBeanName();
             if(definition.isSingleton() && !definition.isLazyInit())
                 getBean(beanName);
+        }
+    }
+
+    /**
+     * Bean 생성 과정에 적용될 BeanPostProcessor들을 등록한다.
+     *
+     * - 등록 순서 = 실행 순서
+     * - singleton 생성 이전에 반드시 호출되어야 한다
+     */
+    private void registerBeanPostProcessors() {
+        beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
+        beanFactory.addBeanPostProcessor(new PostConstructProcessor());
+        beanFactory.addBeanPostProcessor(new InitializingBeanProcessor());
+    }
+
+    /**
+     * 모든 singleton Bean 생성이 완료된 이후 호출되는 콜백.
+     *
+     * - SmartInitializingSingleton 구현 Bean에 대해
+     *   afterSingletonsInstantiated()를 실행한다
+     */
+    private void invokeSmartInitializingSingletons() {
+        for(String beanName : registry.getBeanDefinitionNames()) {
+            Object bean = getBean(beanName);
+            if(bean instanceof SmartInitializingSingleton smart)
+                smart.afterSingletonsInstantiated();
         }
     }
 }

@@ -1,27 +1,25 @@
 package org.example.framework.context;
 
 import org.example.framework.annotation.Autowired;
-import org.example.framework.core.BeanDefinitionRegistry;
-import org.example.framework.core.BeanFactory;
-import org.example.framework.core.DependencyInjector;
-import org.example.framework.core.ListableBeanFactory;
+import org.example.framework.annotation.PreDestroy;
+import org.example.framework.core.*;
+import org.example.framework.core.lifecycle.BeanPostProcessor;
+import org.example.framework.core.lifecycle.DisposableBean;
 import org.example.framework.exception.bean.BeanCreationException;
 import org.example.framework.exception.bean.CircularDependencyException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.example.framework.util.AnnotationUtils.hasAnnotation;
 
-public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
+public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFactory {
 
     private static class CreationStack {
-        private final ThreadLocal<Deque<String>> stack = ThreadLocal.withInitial(ArrayDeque::new);
 
+        private final ThreadLocal<Deque<String>> stack = ThreadLocal.withInitial(ArrayDeque::new);
         void push(String beanName) {
             if(stack.get().contains(beanName))
                 throw new CircularDependencyException(beanName);
@@ -36,11 +34,11 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
         String current() {
             return stack.get().peek();
         }
+
     }
-
     private final DependencyInjector injector;
-    private final BeanDefinitionRegistry registry;
 
+    private final BeanDefinitionRegistry registry;
     /**
      * Cache of singleton objects: bean name --> bean instance
      */
@@ -48,9 +46,61 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
 
     private final CreationStack creationStack = new CreationStack();
 
+    /** 초기화 단계에서 적용될 Processor 목록 */
+    private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
+
     public MyBeanFactory(DependencyInjector injector, BeanDefinitionRegistry registry) {
         this.injector = injector;
         this.registry = registry;
+    }
+
+    @Override
+    public void addBeanPostProcessor(BeanPostProcessor processor) {
+        this.beanPostProcessors.add(processor);
+    }
+
+    @Override
+    public void preInstantiateSingletons() {
+        for (BeanDefinition def : registry.getBeanDefinitions()) {
+            if (def.isSingleton() && !def.isLazyInit())
+                getBean(def.getBeanName());
+        }
+    }
+
+    /**
+     * singleton Bean을 파기한다.
+     *
+     * - @PreDestroy 메서드 실행
+     * - DisposableBean.destroy() 호출
+     */
+    @Override
+    public void destroySingletons() {
+        for(Object bean : singletonObjects.values()) {
+            // 1. @PreDestroy
+            invokePreDestroy(bean);
+
+            // 2. DisposableBean
+            if(bean instanceof DisposableBean disposableBean)
+                disposableBean.destroy();
+        }
+        singletonObjects.clear();
+    }
+
+    private void invokePreDestroy(Object bean) {
+        for(Method method : bean.getClass().getDeclaredMethods()) {
+            if(!method.isAnnotationPresent(PreDestroy.class))
+                continue;
+
+            if(method.getParameterCount() != 0)
+                throw new IllegalStateException("@PreDestroy method must have no arguments: " + method);
+
+            try {
+                method.setAccessible(true);
+                method.invoke(bean);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to invoke @PreDestroy method: " + method, e);
+            }
+        }
     }
 
     /**
@@ -71,7 +121,6 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
     public boolean containsSingleton(String name) {
         return singletonObjects.containsKey(name);
     }
-
 
     @Override
     public String[] getAliases(String name) {
@@ -270,6 +319,13 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
 
             // 의존성 주입
             injector.inject(instance, this);
+
+            // 초기화 전 BeanPostProcessor
+            instance = applyBeforeInitialization(instance, def.getBeanName());
+
+            // 초기화 후 BeanPostProcessor
+            instance = applyAfterInitialization(instance, def.getBeanName());
+
             return instance;
         } catch (Exception e) {
             throw new BeanCreationException(def.getBeanName(), e);
@@ -420,5 +476,21 @@ public class MyBeanFactory implements BeanFactory, ListableBeanFactory {
             throw new IllegalStateException("Unsupported generic type: " + actuallyType);
 
         return clazz;
+    }
+
+    private Object applyBeforeInitialization(Object bean, String beanName) {
+        Object result = bean;
+        for (BeanPostProcessor processor : beanPostProcessors) {
+            result = processor.postProcessBeforeInitialization(result, beanName);
+        }
+        return result;
+    }
+
+    private Object applyAfterInitialization(Object bean, String beanName) {
+        Object result = bean;
+        for (BeanPostProcessor processor : beanPostProcessors) {
+            result = processor.postProcessAfterInitialization(result, beanName);
+        }
+        return result;
     }
 }
