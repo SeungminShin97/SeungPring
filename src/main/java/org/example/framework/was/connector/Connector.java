@@ -4,7 +4,6 @@ import org.example.framework.was.endpoint.AbstractEndpoint;
 import org.example.framework.was.endpoint.BioEndpoint;
 import org.example.framework.was.protocol.HttpProtocolSelector;
 import org.example.framework.was.protocol.http.HttpProtocolHandlerFactory;
-import org.example.framework.was.server.Service;
 import org.example.server.LifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,24 +23,16 @@ public class Connector implements LifeCycle {
     private final HttpProtocolSelector selector;
     /** HTTP Handler Factory */
     private final HttpProtocolHandlerFactory handlerFactory;
-    /**
-     * Connector가 소속된 Service.
-     *
-     * Service는 Connector와 ServletContainer를 연결하는 중간 계층으로,
-     * HTTP 요청을 ServletContainer로 전달하는 역할을 한다.
-     */
-    private final Service service;
 
     public Connector(
             int port,
             ExecutorService executor,
             HttpProtocolSelector selector,
-            HttpProtocolHandlerFactory handlerFactory, Service service
+            HttpProtocolHandlerFactory handlerFactory
     ) {
         this.port = port;
         this.selector = selector;
         this.handlerFactory = handlerFactory;
-        this.service = service;
 
         // TODO: 추후 bio/nio 선택 기능 추가
         this.endpoint = new BioEndpoint(
@@ -79,10 +70,8 @@ public class Connector implements LifeCycle {
         }
     }
 
-
     public int getPort() {
         return port;
     }
 
-    public Service getService() { return service; }
 }

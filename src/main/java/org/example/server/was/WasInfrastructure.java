@@ -3,10 +3,8 @@ package org.example.server.was;
 import org.example.framework.was.adapter.DefaultServletAdapter;
 import org.example.framework.was.connector.Connector;
 import org.example.framework.was.container.Servlet;
-import org.example.framework.was.container.ServletContainer;
 import org.example.framework.was.protocol.HttpProtocolSelector;
 import org.example.framework.was.protocol.http.HttpProtocolHandlerFactory;
-import org.example.framework.was.server.Service;
 import org.example.server.LifeCycle;
 import org.example.server.config.SeungPringApplicationConfig;
 import org.slf4j.Logger;
@@ -27,17 +25,14 @@ public final class WasInfrastructure implements LifeCycle {
 
         HttpProtocolSelector selector = new HttpProtocolSelector();
 
-        Service service = new Service(new ServletContainer(servlet));
-
         HttpProtocolHandlerFactory handlerFactory =
-                HttpProtocolHandlerFactory.create(new DefaultServletAdapter(service));
+                HttpProtocolHandlerFactory.create(new DefaultServletAdapter(servlet));
 
         this.connector = new Connector(
                 config.port(),
                 executor,
                 selector,
-                handlerFactory,
-                service
+                handlerFactory
         );
     }
 
