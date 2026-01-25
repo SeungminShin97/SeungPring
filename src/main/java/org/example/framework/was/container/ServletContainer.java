@@ -2,6 +2,10 @@ package org.example.framework.was.container;
 
 import org.example.framework.was.protocol.model.HttpRequest;
 import org.example.framework.was.protocol.model.HttpResponse;
+import org.example.framework.web.filter.DefaultFilterChain;
+import org.example.framework.web.filter.Filter;
+
+import java.util.List;
 
 /**
  * WAS 내부에서 <strong>서블릿 표준(Servlet 계약)을 실행하는 컨테이너 경계</strong>입니다.
@@ -38,6 +42,7 @@ import org.example.framework.was.protocol.model.HttpResponse;
 public class ServletContainer implements Servlet {
 
     private final Servlet servlet;
+    private final List<Filter> filters;
 
     /**
      * 실행 대상이 되는 Servlet 구현체를 주입받아 컨테이너를 초기화합니다.
@@ -49,9 +54,11 @@ public class ServletContainer implements Servlet {
      * </p>
      *
      * @param servlet 서블릿 표준 계약을 구현한 실행 대상 객체
+     * @param filters 필터 목록
      */
-    public ServletContainer(Servlet servlet) {
+    public ServletContainer(Servlet servlet, List<Filter> filters) {
         this.servlet = servlet;
+        this.filters = filters;
     }
 
     /**
@@ -74,6 +81,7 @@ public class ServletContainer implements Servlet {
      */
     @Override
     public void service(HttpRequest request, HttpResponse response) throws Exception {
-        servlet.service(request, response);
+        DefaultFilterChain chain = new DefaultFilterChain(filters, servlet);
+        chain.doFilter(request, response);
     }
 }
