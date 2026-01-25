@@ -1,7 +1,7 @@
 package org.example.framework.context;
 
+import org.example.framework.context.beanDefinition.BeanDefinition;
 import org.example.framework.core.BeanDefinitionRegistry;
-import org.example.framework.exception.bean.BeanException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 
 import java.util.*;
@@ -50,7 +50,7 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
         BeanDefinition found = null;
 
         for(BeanDefinition beanDefinition : beanDefinitions.values()) {
-            if(beanDefinition.getBeanClass() == type) {
+            if(beanDefinition.getResolvableType() == type) {
                 // 2개 이상의 후보 검색 시 예외처리
                 if(found != null)
                     throw new IllegalStateException("Multiple beans found for type " + type.getName());

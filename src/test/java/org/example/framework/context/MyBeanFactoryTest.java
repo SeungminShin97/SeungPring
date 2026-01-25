@@ -1,10 +1,10 @@
 package org.example.framework.context;
 
 import org.example.framework.annotation.Autowired;
+import org.example.framework.context.beanDefinition.BeanDefinition;
 import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.exception.bean.BeanCreationException;
-import org.example.framework.exception.bean.CircularDependencyException;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 import org.example.test.DummyBean;
 import org.example.test.DummyChildService;
@@ -15,11 +15,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.security.Principal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class MyBeanFactoryTest {
 

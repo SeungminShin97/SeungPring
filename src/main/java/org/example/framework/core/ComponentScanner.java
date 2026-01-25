@@ -1,6 +1,6 @@
 package org.example.framework.core;
 
-import org.example.framework.context.BeanDefinition;
+import org.example.framework.context.beanDefinition.BeanDefinition;
 
 import java.util.Set;
 

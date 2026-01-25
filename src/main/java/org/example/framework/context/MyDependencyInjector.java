@@ -1,6 +1,7 @@
 package org.example.framework.context;
 
 import org.example.framework.annotation.Autowired;
+import org.example.framework.context.beanDefinition.BeanDefinition;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.core.DependencyInjector;
 

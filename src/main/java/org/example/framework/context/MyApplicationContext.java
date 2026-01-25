@@ -1,12 +1,17 @@
 package org.example.framework.context;
 
+import org.example.framework.annotation.Bean;
+import org.example.framework.annotation.Configuration;
 import org.example.framework.annotation.Lazy;
 import org.example.framework.annotation.Scope;
+import org.example.framework.context.beanDefinition.BeanDefinition;
+import org.example.framework.context.beanDefinition.ClassBeanDefinition;
+import org.example.framework.context.beanDefinition.ConfigurationBeanDefinition;
+import org.example.framework.context.beanDefinition.MethodBeanDefinition;
 import org.example.framework.context.processor.ApplicationContextAwareProcessor;
 import org.example.framework.context.processor.InitializingBeanProcessor;
 import org.example.framework.context.processor.PostConstructProcessor;
 import org.example.framework.core.*;
-import org.example.framework.core.lifecycle.ApplicationContextAware;
 import org.example.framework.core.lifecycle.SmartInitializingSingleton;
 import org.example.framework.exception.ComponentScanException;
 import org.slf4j.Logger;
@@ -14,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
@@ -65,8 +71,6 @@ public class MyApplicationContext extends AbstractApplicationContext {
         this.listableBeanFactory = factory;
         this.scanner = new MyComponentScanner();
         this.basePackages = basePackages;
-
-
     }
 
     @Override
@@ -74,13 +78,16 @@ public class MyApplicationContext extends AbstractApplicationContext {
         // 1. 컴포넌트 스캔 + BeanDefinition 등록
         refreshBeanFactory();
 
-        // 2. BeanPostProcessor 등록
+        // 2. Bean 등록
+        processConfigurationBeans();
+
+        // 3. BeanPostProcessor 등록
         registerBeanPostProcessors();
 
-        // 3. Lazy 제외 singleton Bean 생성
+        // 4. Lazy 제외 singleton Bean 생성
         preInstantiateSingletons();
 
-        // 4. singleton 전체 초기화 완료 후 콜백
+        // 5. singleton 전체 초기화 완료 후 콜백
         invokeSmartInitializingSingletons();
     }
 
@@ -176,7 +183,11 @@ public class MyApplicationContext extends AbstractApplicationContext {
             boolean isLazyInit = hasAnnotation(clazz, Lazy.class);
 
             // Bean 메타정보(클래스, 이름, 스코프)를 담은 BeanDefinition 생성
-            BeanDefinition beanDefinition = new BeanDefinition(clazz, beanName, scopeType, isLazyInit);
+            BeanDefinition beanDefinition;
+            if(hasAnnotation(clazz, Configuration.class))
+                beanDefinition = new ConfigurationBeanDefinition(clazz, beanName, scopeType, isLazyInit);
+            else
+                beanDefinition = new ClassBeanDefinition(clazz, beanName, scopeType, isLazyInit);
 
             // BeanDefinitionRegistry에 등록
             registry.registerBeanDefinition(beanName, beanDefinition);
@@ -268,12 +279,59 @@ public class MyApplicationContext extends AbstractApplicationContext {
         for(String beanName : registry.getBeanDefinitionNames()) {
             BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);
 
-            Class<?> beanClass = beanDefinition.getBeanClass();
+            Class<?> beanClass = beanDefinition.getResolvableType();
             if(hasAnnotation(beanClass, annotationType))
                 result.put(beanName, getBean(beanName));
         }
 
         return result;
+    }
+
+    /**
+     * {@code @Configuration} 클래스로부터 {@code @Bean} 메서드들을 탐색하여
+     * {@link MethodBeanDefinition}으로 변환 후 BeanDefinitionRegistry에 등록한다.
+     *
+     * <p>
+     * 이 메서드는 ConfigurationBeanDefinition 자체를 순회 대상으로 하며,
+     * registry에 이미 등록된 빈 이름과 충돌하는 @Bean 메서드는 무시한다.
+     * </p>
+     *
+     * <p>
+     * 주의:
+     * registry 순회 중 신규 BeanDefinition 등록이 발생하므로,
+     * ConcurrentModificationException 방지를 위해
+     * ConfigurationBeanDefinition 목록을 스냅샷으로 분리한 후 처리한다.
+     * </p>
+     */
+    private void processConfigurationBeans() {
+        // ConfigurationBeanDefinition 스냅샷
+        // 순회 중 registry 변경으로 인한 ConcurrentModificationException 방지
+        List<ConfigurationBeanDefinition> configs =
+                registry.getBeanDefinitions().stream()
+                        .filter(def -> def instanceof ConfigurationBeanDefinition)
+                        .map(def -> (ConfigurationBeanDefinition) def)
+                        .toList();
+
+        for(ConfigurationBeanDefinition configDef : configs) {
+            Class<?> clazz = configDef.getResolvableType();
+
+            for(Method method : clazz.getDeclaredMethods()) {
+                if(!method.isAnnotationPresent(Bean.class))
+                    continue;
+
+                Bean bean = method.getAnnotation(Bean.class);
+
+                String beanName = bean.name().isBlank() ? method.getName() : bean.name();
+
+                if(registry.containsBeanDefinition(beanName))
+                    continue;
+
+                MethodBeanDefinition methodDef =
+                        new MethodBeanDefinition(beanName, bean.scope(), bean.lazy(), method, configDef.getBeanName());
+
+                registry.registerBeanDefinition(beanName, methodDef);
+            }
+        }
     }
 
     /**

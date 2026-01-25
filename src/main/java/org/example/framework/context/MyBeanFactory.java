@@ -2,6 +2,8 @@ package org.example.framework.context;
 
 import org.example.framework.annotation.Autowired;
 import org.example.framework.annotation.PreDestroy;
+import org.example.framework.context.beanDefinition.BeanDefinition;
+import org.example.framework.context.beanDefinition.MethodBeanDefinition;
 import org.example.framework.core.*;
 import org.example.framework.core.lifecycle.BeanPostProcessor;
 import org.example.framework.core.lifecycle.DisposableBean;
@@ -156,7 +158,7 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
 
         // 후보 수집
         for(BeanDefinition def : registry.getBeanDefinitions()) {
-            if(requiredType.isAssignableFrom(def.getBeanClass()))
+            if(requiredType.isAssignableFrom(def.getResolvableType()))
                 candidates.add(def);
         }
 
@@ -213,7 +215,7 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
         if(containsSingleton(name))
             return singletonObjects.get(name).getClass();
 
-        return getBeanDefinitionOrThrow(name).getBeanClass();
+        return getBeanDefinitionOrThrow(name).getResolvableType();
     }
 
     /**
@@ -229,7 +231,7 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
 
         // 후보 BeanDefinition 수집
         for(BeanDefinition def : registry.getBeanDefinitions()) {
-            if(type.isAssignableFrom(def.getBeanClass()))
+            if(type.isAssignableFrom(def.getResolvableType()))
                 candidates.add(def);
         }
 
@@ -281,7 +283,7 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
     @Override
     public boolean isTypeMatch(String name, Class<?> typeToMatch) {
         BeanDefinition beanDefinition = getBeanDefinitionOrThrow(name);
-        return typeToMatch.isAssignableFrom(beanDefinition.getBeanClass());
+        return typeToMatch.isAssignableFrom(beanDefinition.getResolvableType());
     }
 
     /**
@@ -309,27 +311,74 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
      */
     private Object createBean(BeanDefinition def) {
         try {
-            Class<?> clazz = def.getBeanClass();
-
-            Constructor<?> constructor = resolveConstructor(clazz);
-            Object[] args = resolveConstructorArgs(constructor);
-
-            constructor.setAccessible(true);
-            Object instance = constructor.newInstance(args);
-
-            // 의존성 주입
-            injector.inject(instance, this);
-
-            // 초기화 전 BeanPostProcessor
-            instance = applyBeforeInitialization(instance, def.getBeanName());
-
-            // 초기화 후 BeanPostProcessor
-            instance = applyAfterInitialization(instance, def.getBeanName());
-
-            return instance;
+            return switch (def.getType()) {
+                case CLASS, CONFIGURATION -> createClassBean(def);
+                case METHOD -> createMethodBean((MethodBeanDefinition) def);
+            };
         } catch (Exception e) {
             throw new BeanCreationException(def.getBeanName(), e);
         }
+    }
+
+    /**
+     * 클래스 기반 {@link BeanDefinition}으로부터 빈 인스턴스를 생성한다.
+     *
+     * <p>
+     * 생성자 해석 → 인스턴스 생성 → 의존성 주입 →
+     * BeanPostProcessor 전/후 처리를 순차적으로 수행한다.
+     * </p>
+     *
+     * @param def 클래스 기반 빈 정의
+     * @return 생성 및 초기화가 완료된 빈 인스턴스
+     * @throws Exception 빈 생성 과정에서 발생한 예외
+     */
+    private Object createClassBean(BeanDefinition def) throws Exception {
+        Class<?> clazz = def.getResolvableType();
+
+        Constructor<?> constructor = resolveConstructor(clazz);
+        Object[] args = resolveConstructorArgs(constructor);
+
+        constructor.setAccessible(true);
+        Object instance = constructor.newInstance(args);
+
+        // 의존성 주입
+        injector.inject(instance, this);
+
+        // 초기화 전 BeanPostProcessor
+        instance = applyBeforeInitialization(instance, def.getBeanName());
+
+        // 초기화 후 BeanPostProcessor
+        instance = applyAfterInitialization(instance, def.getBeanName());
+
+        return instance;
+    }
+
+    /**
+     * {@link MethodBeanDefinition}에 정의된 팩토리 메서드를 호출하여
+     * 빈 인스턴스를 생성한다.
+     *
+     * <p>
+     * Configuration 빈을 먼저 조회한 뒤,
+     * 해당 인스턴스를 대상으로 @Bean 메서드를 호출한다.
+     * </p>
+     *
+     * @param def 메서드 기반 빈 정의
+     * @return 생성 및 초기화가 완료된 빈 인스턴스
+     * @throws Exception 빈 생성 과정에서 발생한 예외
+     */
+    private Object createMethodBean(MethodBeanDefinition def) throws Exception {
+        Object configBean = getBean(def.getConfigurationBeanName());
+
+        Method method = def.getFactoryMethod();
+        Object[] args = resolveMethodArgs(method);
+
+        method.setAccessible(true);
+        Object instance = method.invoke(configBean, args);
+
+        instance = applyBeforeInitialization(instance, def.getBeanName());
+        instance = applyAfterInitialization(instance, def.getBeanName());
+
+        return instance;
     }
 
     /**
@@ -449,6 +498,37 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
                 if(!currentBean.isLazyInit() && dependencyBean.isLazyInit())
                     throw new IllegalStateException("Eager bean '" + currentBean.getBeanName() +
                             "' cannot depend on lazy bean '" + dependencyBean.getBeanName() + "'");
+            }
+            args[i] = getBean(paramType);
+        }
+
+        return args;
+    }
+
+    /**
+     * @Bean 메서드의 파라미터를 해석하여 실제 인자 배열을 생성한다.
+     *
+     * <p>
+     * 파라미터 타입이 {@link List}인 경우,
+     * 제네릭 타입을 기준으로 다중 빈 주입을 수행한다.
+     * </p>
+     *
+     * @param method 팩토리 메서드
+     * @return 메서드 호출에 사용할 인자 배열
+     */
+    private Object[] resolveMethodArgs(Method method) {
+        Class<?>[] paramTypes = method.getParameterTypes();
+        Type[] genericTypes = method.getGenericParameterTypes();
+
+        Object[] args = new Object[paramTypes.length];
+
+        for (int i = 0; i < paramTypes.length; i++) {
+            Class<?> paramType = paramTypes[i];
+
+            if (List.class.isAssignableFrom(paramType)) {
+                Class<?> genericType = resolveGenericType(genericTypes[i]);
+                args[i] = getBeansOfType(genericType);
+                continue;
             }
             args[i] = getBean(paramType);
         }
