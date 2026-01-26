@@ -469,17 +469,18 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
     }
 
     /**
-     * 선택된 생성자의 파라미터 타입을 기반으로 필요한 의존성을 조회하여
+     * 선택된 생성자의 파라미터를 해석하여
      * 생성자 호출에 사용할 인자 배열을 생성한다.
      *
-     * <p>각 파라미터 타입에 대해 {@link BeanFactory#getBean(Class)}를 호출하여
-     * 해당 타입의 Bean 인스턴스를 가져오며, 생성자 기반 의존성 주입 시
-     * 사용되는 인자 목록을 완성한다.</p>
-
+     * <p>
+     * 각 파라미터는 {@link #resolveDependency(Class, Type)}를 통해
+     * 실제 주입할 객체로 변환된다.
+     * </p>
      *
-     * @param constructor 생성자 주입에 사용할 {@link Constructor} 객체
+     * @param constructor 생성자 주입에 사용할 {@link Constructor}
      * @return 생성자 호출 시 전달할 인자 배열
      */
+
     private Object[] resolveConstructorArgs(Constructor<?> constructor) {
         // 파리미터 타입 기반 bean 추출
         Class<?>[] paramTypes = constructor.getParameterTypes();
@@ -487,69 +488,23 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
 
         Object[] args = new Object[paramTypes.length];
 
-        for(int i = 0; i < paramTypes.length; i++) {
-            Class<?> paramType = paramTypes[i];
-
-            // List 주입 처리
-            if(List.class.isAssignableFrom(paramType)) {
-                Class<?> genericType = resolveGenericType(genericTypes[i]);
-                args[i] = getBeansOfType(genericType);
-                continue;
-            }
-
-            // Eager bean이 Lazy bean을 가지고 있을 경우 예외
-            BeanDefinition dependencyBean = registry.getBeanDefinitionByType(paramType);
-
-            if (dependencyBean instanceof LazyProxyCapable capable && capable.isLazyProxy()) {
-
-                if (!paramType.isInterface()) {
-                    throw new IllegalStateException(
-                            "LazyProxy injection requires interface type: " + paramType.getName()
-                    );
-                }
-
-                Class<?> realType = dependencyBean.getResolvableType();
-
-                if (!paramType.isAssignableFrom(realType)) {
-                    throw new IllegalStateException(
-                            "LazyProxy target type mismatch: " + realType.getName()
-                    );
-                }
-
-                args[i] = LazyProxyFactory.createLazyProxy(
-                        paramType,
-                        realType,
-                        this
-                );
-                continue;
-            }
-
-
-            String currentName = creationStack.current();
-            if (currentName != null) {
-                BeanDefinition currentBean = registry.getBeanDefinition(currentName);
-
-                if (!currentBean.isLazyInit() && dependencyBean.isLazyInit()) {
-                    throw new IllegalStateException("Eager bean '" + currentBean.getBeanName() +
-                                    "' cannot depend on lazy bean '" + dependencyBean.getBeanName() + "'");
-                }
-            }
-            args[i] = getBean(paramType);
-        }
+        for (int i = 0; i < paramTypes.length; i++)
+            args[i] = resolveDependency(paramTypes[i], genericTypes[i]);
 
         return args;
     }
 
     /**
-     * @Bean 메서드의 파라미터를 해석하여 실제 인자 배열을 생성한다.
+     * {@code @Bean} 팩토리 메서드의 파라미터를 해석하여
+     * 메서드 호출에 사용할 인자 배열을 생성한다.
      *
      * <p>
-     * 파라미터 타입이 {@link List}인 경우,
-     * 제네릭 타입을 기준으로 다중 빈 주입을 수행한다.
+     * 파라미터 해석 규칙은 생성자 주입과 동일하며,
+     * {@link #resolveDependency(Class, Type)}에 위임된다.
      * </p>
      *
      * @param method 팩토리 메서드
-     * @return 메서드 호출에 사용할 인자 배열
+     * @return 메서드 호출 시 전달할 인자 배열
      */
     private Object[] resolveMethodArgs(Method method) {
         Class<?>[] paramTypes = method.getParameterTypes();
@@ -558,17 +513,55 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
         Object[] args = new Object[paramTypes.length];
 
         for (int i = 0; i < paramTypes.length; i++) {
-            Class<?> paramType = paramTypes[i];
-
-            if (List.class.isAssignableFrom(paramType)) {
-                Class<?> genericType = resolveGenericType(genericTypes[i]);
-                args[i] = getBeansOfType(genericType);
-                continue;
-            }
-            args[i] = getBean(paramType);
+            args[i] = resolveDependency(paramTypes[i], genericTypes[i]);
         }
 
         return args;
+    }
+
+    /**
+     * 파라미터 타입과 제네릭 정보를 기반으로
+     * 실제 주입할 의존성 객체를 결정한다.
+     *
+     * <p>
+     * - {@link List} 타입은 다중 빈 주입을 수행한다.<br>
+     * - LazyProxy 대상인 경우 프록시 객체를 생성한다.<br>
+     * - 그 외에는 일반 빈을 조회한다.
+     * </p>
+     *
+     * @param paramType 주입 대상 파라미터 타입
+     * @param genericType 제네릭 타입 정보
+     * @return 주입할 의존성 객체
+     */
+    private Object resolveDependency(Class<?> paramType, Type genericType) {
+        // 1. List<T> 주입
+        if (List.class.isAssignableFrom(paramType)) {
+            Class<?> elementType = resolveGenericType(genericType);
+            return getBeansOfType(elementType);
+        }
+
+        // 2. 타입으로 BeanDefinition 조회
+        BeanDefinition dependency = registry.getBeanDefinitionByType(paramType);
+
+        // 3. LazyProxy 대상인지 판단
+        if (dependency instanceof LazyProxyCapable lazy && lazy.isLazyProxy()) {
+            Class<?> realType = dependency.getResolvableType();
+
+            // 인터페이스 강제
+            if (!paramType.isInterface())
+                throw new IllegalStateException("LazyProxy requires interface type: " + paramType.getName());
+
+            if (!paramType.isAssignableFrom(realType))
+                throw new IllegalStateException("LazyProxy type mismatch: " + realType.getName());
+
+            return LazyProxyFactory.createLazyProxy(
+                    paramType,
+                    realType,
+                    this
+            );
+        }
+        // 4. 일반 빈
+        return getBean(paramType);
     }
 
     /**
