@@ -4,6 +4,8 @@ import org.example.framework.annotation.Autowired;
 import org.example.framework.annotation.PreDestroy;
 import org.example.framework.context.beanDefinition.BeanDefinition;
 import org.example.framework.context.beanDefinition.MethodBeanDefinition;
+import org.example.framework.context.capability.LazyProxyCapable;
+import org.example.framework.context.proxy.LazyProxyFactory;
 import org.example.framework.core.*;
 import org.example.framework.core.lifecycle.BeanPostProcessor;
 import org.example.framework.core.lifecycle.DisposableBean;
@@ -54,6 +56,11 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
     public MyBeanFactory(DependencyInjector injector, BeanDefinitionRegistry registry) {
         this.injector = injector;
         this.registry = registry;
+    }
+
+    @Override
+    public Map<String, Object> getSingleton() {
+        return singletonObjects;
     }
 
     @Override
@@ -491,13 +498,41 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
             }
 
             // Eager bean이 Lazy bean을 가지고 있을 경우 예외
+            BeanDefinition dependencyBean = registry.getBeanDefinitionByType(paramType);
+
+            if (dependencyBean instanceof LazyProxyCapable capable && capable.isLazyProxy()) {
+
+                if (!paramType.isInterface()) {
+                    throw new IllegalStateException(
+                            "LazyProxy injection requires interface type: " + paramType.getName()
+                    );
+                }
+
+                Class<?> realType = dependencyBean.getResolvableType();
+
+                if (!paramType.isAssignableFrom(realType)) {
+                    throw new IllegalStateException(
+                            "LazyProxy target type mismatch: " + realType.getName()
+                    );
+                }
+
+                args[i] = LazyProxyFactory.createLazyProxy(
+                        paramType,
+                        realType,
+                        this
+                );
+                continue;
+            }
+
+
             String currentName = creationStack.current();
-            if(currentName != null) {
+            if (currentName != null) {
                 BeanDefinition currentBean = registry.getBeanDefinition(currentName);
-                BeanDefinition dependencyBean = registry.getBeanDefinition(paramType);
-                if(!currentBean.isLazyInit() && dependencyBean.isLazyInit())
+
+                if (!currentBean.isLazyInit() && dependencyBean.isLazyInit()) {
                     throw new IllegalStateException("Eager bean '" + currentBean.getBeanName() +
-                            "' cannot depend on lazy bean '" + dependencyBean.getBeanName() + "'");
+                                    "' cannot depend on lazy bean '" + dependencyBean.getBeanName() + "'");
+                }
             }
             args[i] = getBean(paramType);
         }

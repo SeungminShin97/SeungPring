@@ -63,6 +63,22 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
     }
 
     @Override
+    public BeanDefinition getBeanDefinitionByType(Class<?> type) {
+        List<BeanDefinition> candidates = beanDefinitions.values().stream()
+                .filter(def -> type.isAssignableFrom(def.getResolvableType()))
+                .toList();
+
+        if(candidates.isEmpty())
+            throw new NoSuchBeanDefinitionException(type.getSimpleName());
+
+        if(candidates.size() > 1)
+            throw new IllegalStateException("Multiple beans found for type: " + type.getName() + " -> " +
+                    candidates.stream().map(BeanDefinition::getBeanName).toList());
+
+        return candidates.getFirst();
+    }
+
+    @Override
     public List<String> getBeanDefinitionNames() {
         return new ArrayList<>(beanDefinitions.keySet());
     }

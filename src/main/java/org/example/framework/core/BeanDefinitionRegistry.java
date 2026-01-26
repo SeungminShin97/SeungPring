@@ -72,4 +72,16 @@ public interface BeanDefinitionRegistry {
      * @return {@link BeanDefinition} 컬렉션
      */
     Collection<BeanDefinition> getBeanDefinitions();
+
+    /**
+     * 지정된 타입에 할당 가능한 {@link BeanDefinition}을 반환한다.<br>
+     *
+     * 등록된 모든 {@link BeanDefinition}을 대상으로
+     * {@code type.isAssignableFrom(def.getResolvableType())} 조건을 기준으로
+     * 타입 호환 여부를 검사한다.
+     *
+     * @param type 조회할 Bean 타입
+     * @return 요청된 타입에 할당 가능한 {@link BeanDefinition}
+     */
+    BeanDefinition getBeanDefinitionByType(Class<?> type);
 }

@@ -1,8 +1,11 @@
 package org.example.framework.context.beanDefinition;
 
+import org.example.framework.annotation.LazyProxy;
 import org.example.framework.context.ScopeType;
+import org.example.framework.context.capability.LazyProxyCapable;
 
 import java.beans.Introspector;
+import java.lang.annotation.Annotation;
 
 /**
  * 일반 클래스 기반 빈 정의
@@ -11,9 +14,10 @@ import java.beans.Introspector;
  * @Component, @Controller 등의 클래스 레벨 빈을 표현한다.
  * </p>
  */
-public class ClassBeanDefinition extends BeanDefinition{
+public class ClassBeanDefinition extends BeanDefinition implements LazyProxyCapable {
 
     private final Class<?> beanClass;
+    private boolean lazyProxy;
 
     public ClassBeanDefinition(Class<?> clazz) {
         super(Introspector.decapitalize(clazz.getSimpleName()), ScopeType.SINGLETON, false);
@@ -48,5 +52,15 @@ public class ClassBeanDefinition extends BeanDefinition{
     @Override
     public Class<?> getResolvableType() {
         return beanClass;
+    }
+
+    @Override
+    public void setLazyProxy() {
+        this.lazyProxy = true;
+    }
+
+    @Override
+    public boolean isLazyProxy() {
+        return lazyProxy;
     }
 }

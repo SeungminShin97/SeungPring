@@ -1,13 +1,11 @@
 package org.example.framework.context;
 
-import org.example.framework.annotation.Bean;
-import org.example.framework.annotation.Configuration;
-import org.example.framework.annotation.Lazy;
-import org.example.framework.annotation.Scope;
+import org.example.framework.annotation.*;
 import org.example.framework.context.beanDefinition.BeanDefinition;
 import org.example.framework.context.beanDefinition.ClassBeanDefinition;
 import org.example.framework.context.beanDefinition.ConfigurationBeanDefinition;
 import org.example.framework.context.beanDefinition.MethodBeanDefinition;
+import org.example.framework.context.capability.LazyProxyCapable;
 import org.example.framework.context.processor.ApplicationContextAwareProcessor;
 import org.example.framework.context.processor.InitializingBeanProcessor;
 import org.example.framework.context.processor.PostConstructProcessor;
@@ -189,6 +187,10 @@ public class MyApplicationContext extends AbstractApplicationContext {
             else
                 beanDefinition = new ClassBeanDefinition(clazz, beanName, scopeType, isLazyInit);
 
+            // @LazyProxy 검사
+            if(clazz.isAnnotationPresent(LazyProxy.class) && beanDefinition instanceof LazyProxyCapable capable)
+                capable.setLazyProxy();
+
             // BeanDefinitionRegistry에 등록
             registry.registerBeanDefinition(beanName, beanDefinition);
         }
@@ -337,12 +339,13 @@ public class MyApplicationContext extends AbstractApplicationContext {
     /**
      * Eager Init <br>
      *
-     * Lazy 어노테이션이 붙지 않은 Singleton Scope bean 을 로드하는 메서드
+     * Lazy, LazyProxy 어노테이션이 붙지 않은 Singleton Scope bean 을 로드하는 메서드
      */
     private void preInstantiateSingletons() {
         for(BeanDefinition definition : registry.getBeanDefinitions()) {
             String beanName = definition.getBeanName();
-            if(definition.isSingleton() && !definition.isLazyInit())
+            boolean lazyProxy = definition instanceof LazyProxyCapable c && c.isLazyProxy();
+            if(definition.isSingleton() && !definition.isLazyInit() && !lazyProxy)
                 getBean(beanName);
         }
     }
