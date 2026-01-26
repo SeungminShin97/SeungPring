@@ -59,8 +59,14 @@ public class LazyInvocationHandler implements InvocationHandler {
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if(method.getDeclaringClass() == Object.class)
-            return method.invoke(this, args);
+        if(method.getDeclaringClass() == Object.class) {
+            return switch (method.getName()) {
+                case "toString" -> "LazyProxy(" + realType.getSimpleName() + ")";
+                case "hashCode" -> System.identityHashCode(proxy);
+                case "equals" -> proxy == args[0];
+                default -> method.invoke(this, args);
+            };
+        }
 
         if(target == null) {
             synchronized (this) {
