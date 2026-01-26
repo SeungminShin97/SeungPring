@@ -2,10 +2,12 @@ package org.example.app.health;
 
 import org.example.framework.annotation.Autowired;
 import org.example.framework.annotation.Controller;
+import org.example.framework.annotation.Lazy;
 import org.example.framework.annotation.RequestMapping;
 import org.example.framework.was.protocol.model.HttpMethod;
 
 @Controller
+@Lazy
 public class HealthController {
 
     @Autowired
