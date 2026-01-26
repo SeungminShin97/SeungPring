@@ -14,6 +14,7 @@ public abstract class BeanDefinition {
     private final ScopeType scope;
     private final String beanName;
     private final boolean lazyInit;
+    private boolean isPrimary;
 
     /**
      * BeanDefinition 기본 생성자
@@ -54,4 +55,10 @@ public abstract class BeanDefinition {
      */
 
     public abstract Class<?> getResolvableType();
+
+    public boolean isPrimary() { return isPrimary; }
+
+    public void setPrimary() {
+        this.isPrimary = true;
+    }
 }

@@ -541,7 +541,7 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
         }
 
         // 2. 타입으로 BeanDefinition 조회
-        BeanDefinition dependency = registry.getBeanDefinitionByType(paramType);
+        BeanDefinition dependency = registry.resolveSingleBeanByType(paramType);
 
         // 3. LazyProxy 대상인지 판단
         if (dependency instanceof LazyProxyCapable lazy && lazy.isLazyProxy()) {

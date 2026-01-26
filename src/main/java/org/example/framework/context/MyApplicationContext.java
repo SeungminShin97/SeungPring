@@ -187,6 +187,10 @@ public class MyApplicationContext extends AbstractApplicationContext {
             else
                 beanDefinition = new ClassBeanDefinition(clazz, beanName, scopeType, isLazyInit);
 
+            // @Primary 검사
+            if(clazz.isAnnotationPresent(Primary.class))
+                beanDefinition.setPrimary();
+
             // @LazyProxy 검사
             if(clazz.isAnnotationPresent(LazyProxy.class) && beanDefinition instanceof LazyProxyCapable capable)
                 capable.setLazyProxy();

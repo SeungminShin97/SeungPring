@@ -62,6 +62,7 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
         return found;
     }
 
+    @Deprecated
     @Override
     public BeanDefinition getBeanDefinitionByType(Class<?> type) {
         List<BeanDefinition> candidates = beanDefinitions.values().stream()
@@ -76,6 +77,36 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
                     candidates.stream().map(BeanDefinition::getBeanName).toList());
 
         return candidates.getFirst();
+    }
+
+    @Override
+    public List<BeanDefinition> getBeanDefinitionsByType(Class<?> type) {
+        return getBeanDefinitions().stream()
+                .filter(def -> type.isAssignableFrom(def.getResolvableType()))
+                .toList();
+    }
+
+    @Override
+    public BeanDefinition resolveSingleBeanByType(Class<?> type) {
+        List<BeanDefinition> candidates = getBeanDefinitionsByType(type);
+
+        if(candidates.isEmpty())
+            throw new NoSuchBeanDefinitionException(type.getSimpleName());
+
+        if(candidates.size() == 1)
+            return candidates.getFirst();
+
+        List<BeanDefinition> primaries = candidates.stream().filter(BeanDefinition::isPrimary).toList();
+
+        if(primaries.size() == 1)
+            return primaries.getFirst();
+
+        if(primaries.isEmpty())
+            throw new IllegalStateException("Multiple beans found for type " + type.getSimpleName() +
+                    " and no @Primary specified: " +candidates.stream().map(BeanDefinition::getBeanName).toList());
+
+        throw new IllegalStateException("Multiple @Primary beans found for type " + type.getSimpleName() + ": " +
+                primaries.stream().map(BeanDefinition::getBeanName).toList());
     }
 
     @Override
