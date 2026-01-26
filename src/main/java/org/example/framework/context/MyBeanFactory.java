@@ -534,6 +534,7 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
      * @return 주입할 의존성 객체
      */
     private Object resolveDependency(Class<?> paramType, Type genericType) {
+
         // 1. List<T> 주입
         if (List.class.isAssignableFrom(paramType)) {
             Class<?> elementType = resolveGenericType(genericType);
@@ -541,7 +542,12 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
         }
 
         // 2. 타입으로 BeanDefinition 조회
-        BeanDefinition dependency = registry.resolveSingleBeanByType(paramType);
+        BeanDefinition dependency;
+        try {
+            dependency = registry.resolveSingleBeanByType(paramType);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to resolve dependency by type: " + paramType.getName(), e);
+        }
 
         // 3. LazyProxy 대상인지 판단
         if (dependency instanceof LazyProxyCapable lazy && lazy.isLazyProxy()) {
@@ -549,10 +555,12 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
 
             // 인터페이스 강제
             if (!paramType.isInterface())
-                throw new IllegalStateException("LazyProxy requires interface type: " + paramType.getName());
+                throw new IllegalStateException("LazyProxy requires interface type for injection. " + "Found: " + paramType.getName());
 
+            // 타입 호환성 검사
             if (!paramType.isAssignableFrom(realType))
-                throw new IllegalStateException("LazyProxy type mismatch: " + realType.getName());
+                throw new IllegalStateException("LazyProxy type mismatch. " + "Injection type: " + paramType.getName() +
+                        ", actual bean type: " + realType.getName());
 
             return LazyProxyFactory.createLazyProxy(
                     paramType,
@@ -560,9 +568,11 @@ public class MyBeanFactory implements ConfigurableBeanFactory, ListableBeanFacto
                     this
             );
         }
+
         // 4. 일반 빈
         return getBean(paramType);
     }
+
 
     /**
      * {@link List} 타입 의존성 주입을 위해
