@@ -8,6 +8,9 @@ import org.example.framework.core.lifecycle.ApplicationContextAware;
 import org.example.framework.was.protocol.model.HttpRequest;
 import org.example.framework.web.HandlerMethod;
 import org.example.framework.web.RequestMappingInfo;
+import org.example.framework.web.config.WebMvcConfigurationSupport;
+import org.example.framework.web.interceptor.HandlerExecutionChain;
+import org.example.framework.web.interceptor.HandlerInterceptor;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -48,6 +51,12 @@ public class RequestMappingHandlerMapping implements HandlerMapping{
      */
     private ApplicationContext context;
 
+    private final WebMvcConfigurationSupport mvcConfig;
+
+    public RequestMappingHandlerMapping(WebMvcConfigurationSupport mvcConfig) {
+        this.mvcConfig = mvcConfig;
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -76,16 +85,33 @@ public class RequestMappingHandlerMapping implements HandlerMapping{
     }
 
     /**
-     * 주어진 HTTP 요청에 대응하는 Handler를 조회한다.
+     * 주어진 HTTP 요청에 대응하는 {@link HandlerExecutionChain}을 조회한다.
+     *
+     * <p>
+     * 요청의 경로와 HTTP 메서드를 기반으로
+     * 사전에 등록된 {@link RequestMappingInfo} → {@link HandlerMethod} 매핑을 조회한 뒤,
+     * 매칭되는 Handler가 존재하는 경우
+     * 해당 Handler와 적용 가능한 {@link HandlerInterceptor} 목록을 포함한
+     * 실행 체인을 생성하여 반환한다.
+     * </p>
+     *
+     * <p>
+     * 매칭되는 Handler가 없는 경우 {@code null}을 반환하며,
+     * 이후 처리 여부는 호출자(DispatcherServlet)에 위임된다.
+     * </p>
      *
      * @param request 현재 HTTP 요청
-     * @return 매칭되는 {@link HandlerMethod}, 없으면 {@code null}
+     * @return 요청에 매핑된 {@link HandlerExecutionChain}, 없으면 {@code null}
      */
     @Override
-    public Object getHandler(HttpRequest request) {
+    public HandlerExecutionChain getHandler(HttpRequest request) {
         RequestMappingInfo key = new RequestMappingInfo(request.getPath(), request.getMethod());
+        HandlerMethod handlerMethod = handlerMethods.get(key);
 
-        return handlerMethods.get(key);
+        if(handlerMethod == null)
+            return null;
+
+        return new HandlerExecutionChain(handlerMethod, mvcConfig.getInterceptorRegistry().getInterceptors());
     }
 
     /**

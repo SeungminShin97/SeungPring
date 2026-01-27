@@ -3,6 +3,7 @@ package org.example.framework.web;
 import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.model.*;
 import org.example.framework.web.adapter.HandlerAdapter;
+import org.example.framework.web.interceptor.HandlerExecutionChain;
 import org.example.framework.web.mapping.HandlerMapping;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -53,8 +54,9 @@ class DispatcherServletTest {
     @DisplayName("정상 요청은 HandlerMapping → HandlerAdapter → handle 흐름을 탄다")
     void dispatch_success() throws Exception {
         Object handler = new Object();
+        HandlerExecutionChain chain = new HandlerExecutionChain(handler, List.of());
 
-        when(handlerMapping.getHandler(request)).thenReturn(handler);
+        when(handlerMapping.getHandler(request)).thenReturn(chain);
         when(handlerAdapter.supports(handler)).thenReturn(true);
 
         dispatcher.service(request, response);
@@ -79,8 +81,9 @@ class DispatcherServletTest {
     // TODO: Adapter가 없을 경우 500으로 내려야 한다 (현재는 404)
     void dispatch_noAdapter() throws Exception {
         Object handler = new Object();
+        HandlerExecutionChain chain = new HandlerExecutionChain(handler, List.of());
 
-        when(handlerMapping.getHandler(request)).thenReturn(handler);
+        when(handlerMapping.getHandler(request)).thenReturn(chain);
         when(handlerAdapter.supports(handler)).thenReturn(false);
 
         dispatcher.service(request, response);
@@ -94,8 +97,9 @@ class DispatcherServletTest {
     @DisplayName("HandlerAdapter에서 IllegalArgumentException 발생 시 400 BAD_REQUEST")
     void dispatch_badRequest() throws Exception {
         Object handler = new Object();
+        HandlerExecutionChain chain = new HandlerExecutionChain(handler, List.of());
 
-        when(handlerMapping.getHandler(request)).thenReturn(handler);
+        when(handlerMapping.getHandler(request)).thenReturn(chain);
         when(handlerAdapter.supports(handler)).thenReturn(true);
         doThrow(new IllegalArgumentException("bad"))
                 .when(handlerAdapter)
@@ -110,8 +114,9 @@ class DispatcherServletTest {
     @DisplayName("HandlerAdapter에서 일반 Exception 발생 시 500 INTERNAL_SERVER_ERROR")
     void dispatch_internalError() throws Exception {
         Object handler = new Object();
+        HandlerExecutionChain chain = new HandlerExecutionChain(handler, List.of());
 
-        when(handlerMapping.getHandler(request)).thenReturn(handler);
+        when(handlerMapping.getHandler(request)).thenReturn(chain);
         when(handlerAdapter.supports(handler)).thenReturn(true);
         doThrow(new RuntimeException("boom"))
                 .when(handlerAdapter)

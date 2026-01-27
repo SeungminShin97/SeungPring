@@ -23,7 +23,7 @@ class RequestMappingHandlerMappingTest {
         context = new MyApplicationContext("org.example.test");
         context.refresh(); // 중요: 컨텍스트 초기화 명시
 
-        handlerMapping = new RequestMappingHandlerMapping();
+        handlerMapping = context.getBean(RequestMappingHandlerMapping.class);
     }
 
     private HttpRequest newRequest(String path, HttpMethod method) {

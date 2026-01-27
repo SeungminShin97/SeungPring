@@ -6,6 +6,8 @@ import org.example.framework.was.protocol.model.HttpRequest;
 import org.example.framework.was.protocol.model.HttpResponse;
 import org.example.framework.was.protocol.model.HttpStatus;
 import org.example.framework.web.adapter.HandlerAdapter;
+import org.example.framework.web.interceptor.HandlerExecutionChain;
+import org.example.framework.web.interceptor.HandlerInterceptor;
 import org.example.framework.web.mapping.HandlerMapping;
 
 import java.util.List;
@@ -76,25 +78,78 @@ public class DispatcherServlet implements Servlet {
      * @throws Exception Handler 실행 중 발생한 예외
      */
     protected void doDispatch(HttpRequest request, HttpResponse response) throws Exception {
-        Object handler = getHandler(request);
-        HandlerAdapter adapter = getHandlerAdapter(handler);
-        adapter.handle(request, response, handler);
+        HandlerExecutionChain chain = getHandler(request);
+        Object handler = chain.getHandler();
+
+        Exception dispatchException = null;
+
+        try {
+            // preHandle
+            for(HandlerInterceptor interceptor : chain.getInterceptors()) {
+                if(!interceptor.preHandle(request, response, handler)) {
+                    triggerAfterCompletion(chain, request, response, null);
+                    return;
+                }
+            }
+
+            // Handler
+            HandlerAdapter adapter = getHandlerAdapter(handler);
+            adapter.handle(request, response, handler);
+
+            // postHandle
+            for(HandlerInterceptor interceptor : chain.getInterceptors())
+                interceptor.postHandle(request, response, handler);
+        } catch (Exception e) {
+            dispatchException = e;
+            throw e;
+        } finally {
+            // afterCompletion
+            triggerAfterCompletion(chain, request, response, dispatchException);
+        }
+    }
+
+    /**
+     * 인터셉터 체인의 {@link HandlerInterceptor#afterCompletion}을 호출한다.
+     *
+     * <p>
+     * {@code afterCompletion}은 요청 처리 결과와 관계없이
+     * 반드시 한 번 호출되며,
+     * 인터셉터 등록 순서의 역순으로 실행된다.
+     * </p>
+     *
+     * <p>
+     * 이 메서드는 예외 발생 여부를 인터셉터에 전달하여
+     * 리소스 정리, 트레이싱 종료 등의 후처리를 가능하게 한다.
+     * </p>
+     *
+     * @param chain    현재 요청에 대한 실행 체인
+     * @param request  현재 HTTP 요청
+     * @param response 현재 HTTP 응답
+     * @param ex       요청 처리 중 발생한 예외 (없으면 {@code null})
+     * @throws Exception afterCompletion 처리 중 발생한 예외
+     */
+    private void triggerAfterCompletion(HandlerExecutionChain chain, HttpRequest request, HttpResponse response, Exception ex) throws Exception{
+        List<HandlerInterceptor> interceptors = chain.getInterceptors();
+        for(int i = interceptors.size() - 1; i >= 0; i--)
+            interceptors.get(i).afterCompletion(request, response, chain.getHandler(), ex);
     }
 
     /**
      * 주어진 요청에 대응하는 Handler를 조회한다.
      *
-     * <p>등록된 {@link HandlerMapping}들을 순차적으로 조회하며,
-     * 최초로 매칭되는 Handler를 반환한다.</p>
+     * <p>
+     * 실행 체인은 실제 Handler와 함께,
+     * 해당 요청에 적용될 {@link HandlerInterceptor} 목록을 포함한다.
+     * </p>
      *
      * @param request 현재 HTTP 요청
-     * @return 요청에 매핑된 Handler
+     * @return 요청에 매핑된 {@link HandlerExecutionChain}
      * @throws IllegalStateException 매칭되는 Handler가 없는 경우
      */
-    protected Object getHandler(HttpRequest request) {
+    protected HandlerExecutionChain getHandler(HttpRequest request) {
         for (HandlerMapping mapping : handlerMappings) {
-            Object handler = mapping.getHandler(request);
-            if(handler != null) return handler;
+            HandlerExecutionChain chain = mapping.getHandler(request);
+            if(chain != null) return chain;
         }
         throw new IllegalStateException("No handler found for " + request.getMethod() + " " + request.getPath());
     }

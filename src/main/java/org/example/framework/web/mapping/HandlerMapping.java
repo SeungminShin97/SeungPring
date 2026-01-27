@@ -3,6 +3,7 @@ package org.example.framework.web.mapping;
 import org.example.framework.core.lifecycle.ApplicationContextAware;
 import org.example.framework.core.lifecycle.SmartInitializingSingleton;
 import org.example.framework.was.protocol.model.HttpRequest;
+import org.example.framework.web.interceptor.HandlerExecutionChain;
 
 /**
  * {@code HandlerMapping}은 HTTP 요청에 대응하는
@@ -18,7 +19,7 @@ public interface HandlerMapping extends ApplicationContextAware, SmartInitializi
      * 주어진 요청에 매핑되는 Handler를 반환한다.
      *
      * @param request 현재 HTTP 요청
-     * @return 매칭되는 Handler, 없으면 {@code null}
+     * @return {@link HandlerExecutionChain}, 없으면 {@code null}
      */
-    Object getHandler(HttpRequest request);
+    HandlerExecutionChain getHandler(HttpRequest request);
 }
