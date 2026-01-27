@@ -1,5 +1,7 @@
 package org.example.framework.was.protocol.model;
 
+import org.example.framework.exception.http.HttpException;
+
 /**
  * HTTP 요청 메서드를 정의한 열거형.
  * <p>
@@ -17,6 +19,6 @@ public enum HttpMethod {
             if(method.name().equalsIgnoreCase(name))
                 return method;
         }
-        throw new IllegalArgumentException("Unsupported HTTP method: " + name);
+        throw new HttpException(HttpStatus.BAD_REQUEST, "Unsupported HTTP method: " + name);
     }
 }

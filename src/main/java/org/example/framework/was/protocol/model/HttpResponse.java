@@ -1,6 +1,7 @@
 package org.example.framework.was.protocol.model;
 
 import org.example.framework.was.protocol.HttpProtocolVersion;
+import org.example.framework.web.response.ErrorResponse;
 
 import java.nio.charset.StandardCharsets;
 
@@ -48,5 +49,32 @@ public class HttpResponse extends HttpMessage{
         byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
         super.body = new HttpBody(bytes);
         super.header.setContentLength(bytes.length);
+    }
+
+    public void writeJson(ErrorResponse e) {
+        String json = """
+    {
+      "status": %d,
+      "error": "%s",
+      "message": "%s",
+      "path": "%s",
+      "timestamp": %d
+    }
+    """.formatted(
+                e.status(),
+                escape(e.error()),
+                escape(e.message()),
+                escape(e.path()),
+                e.timestamp()
+        );
+
+        byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+        super.body = new HttpBody(bytes);
+        super.header.setContentLength(bytes.length);
+        super.header.setContentType("application/json; charset=UTF-8");
+    }
+
+    private String escape(String s) {
+        return s == null ? "" : s.replace("\"", "\\\"");
     }
 }

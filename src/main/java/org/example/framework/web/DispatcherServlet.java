@@ -1,6 +1,7 @@
 package org.example.framework.web;
 
 import org.example.framework.annotation.Component;
+import org.example.framework.exception.http.HttpException;
 import org.example.framework.was.container.Servlet;
 import org.example.framework.was.protocol.model.HttpRequest;
 import org.example.framework.was.protocol.model.HttpResponse;
@@ -9,6 +10,7 @@ import org.example.framework.web.adapter.HandlerAdapter;
 import org.example.framework.web.interceptor.HandlerExecutionChain;
 import org.example.framework.web.interceptor.HandlerInterceptor;
 import org.example.framework.web.mapping.HandlerMapping;
+import org.example.framework.web.response.ErrorResponse;
 
 import java.util.List;
 
@@ -51,18 +53,23 @@ public class DispatcherServlet implements Servlet {
      * @throws Exception 요청 처리 중 발생한 예외
      */
     @Override
-    public void service(HttpRequest request, HttpResponse response) throws Exception {
+    public void service(HttpRequest request, HttpResponse response) {
         try {
             doDispatch(request, response);
-        } catch (IllegalStateException e) {
-            response.setStatus(HttpStatus.NOT_FOUND);
-            response.writeBody(HttpStatus.NOT_FOUND.reason());
-        } catch (IllegalArgumentException e) {
-            response.setStatus(HttpStatus.BAD_REQUEST);
-            response.writeBody(HttpStatus.BAD_REQUEST.reason());
+        } catch (HttpException e) {
+            response.setStatus(e.getStatus());
+            response.writeJson(ErrorResponse.from(e, request.getPath()));
         } catch (Exception e) {
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-            response.writeBody(HttpStatus.INTERNAL_SERVER_ERROR.reason());
+            response.writeJson(
+                    new ErrorResponse(
+                            HttpStatus.INTERNAL_SERVER_ERROR.code(),
+                            HttpStatus.INTERNAL_SERVER_ERROR.reason(),
+                            "Internal Server Error",
+                            request.getPath(),
+                            System.currentTimeMillis()
+                    )
+            );
         }
     }
 
@@ -151,7 +158,7 @@ public class DispatcherServlet implements Servlet {
             HandlerExecutionChain chain = mapping.getHandler(request);
             if(chain != null) return chain;
         }
-        throw new IllegalStateException("No handler found for " + request.getMethod() + " " + request.getPath());
+        throw new HttpException(HttpStatus.NOT_FOUND, "No handler found for " + request.getMethod() + " " + request.getPath());
     }
 
     /**

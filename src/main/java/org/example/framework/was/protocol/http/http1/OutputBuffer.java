@@ -98,7 +98,7 @@ public class OutputBuffer {
         // Content-Type
         String contentType = response.getHeader().getFirst("Content-Type");
         if (contentType == null || contentType.isEmpty()) {
-            contentType = "application/octet-stream"; // 기본값
+            contentType = "text/plain; charset=UTF-8"; // 기본값
         }
         String contentTypeHeader = "Content-Type: " + contentType + "\r\n";
 
