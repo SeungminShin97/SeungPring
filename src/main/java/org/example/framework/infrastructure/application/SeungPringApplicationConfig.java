@@ -1,4 +1,4 @@
-package org.example.server.config;
+package org.example.framework.infrastructure.application;
 
 import org.example.framework.annotation.ComponentScan;
 

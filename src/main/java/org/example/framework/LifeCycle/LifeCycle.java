@@ -1,4 +1,4 @@
-package org.example.server;
+package org.example.framework.LifeCycle;
 
 public interface LifeCycle {
 

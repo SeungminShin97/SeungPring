@@ -1,6 +1,6 @@
 package org.example.framework.was.endpoint;
 
-import org.example.server.LifeCycle;
+import org.example.framework.LifeCycle.LifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

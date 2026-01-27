@@ -1,4 +1,4 @@
-package org.example.server.servlet;
+package org.example.framework.infrastructure.servlet;
 
 
 import org.example.framework.core.ApplicationContext;

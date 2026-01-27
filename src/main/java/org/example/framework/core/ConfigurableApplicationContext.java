@@ -1,6 +1,6 @@
 package org.example.framework.core;
 
-import org.example.server.LifeCycle;
+import org.example.framework.LifeCycle.LifeCycle;
 
 /**
  * 설정 가능(Application-level)한 ApplicationContext 인터페이스.

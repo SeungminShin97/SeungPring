@@ -4,7 +4,7 @@ import org.example.framework.was.endpoint.AbstractEndpoint;
 import org.example.framework.was.endpoint.BioEndpoint;
 import org.example.framework.was.protocol.HttpProtocolSelector;
 import org.example.framework.was.protocol.http.HttpProtocolHandlerFactory;
-import org.example.server.LifeCycle;
+import org.example.framework.LifeCycle.LifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

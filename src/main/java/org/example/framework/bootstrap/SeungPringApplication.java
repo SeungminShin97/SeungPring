@@ -1,11 +1,11 @@
-package org.example.server;
+package org.example.framework.bootstrap;
 
 import org.example.framework.context.MyApplicationContext;
 import org.example.framework.core.ConfigurableApplicationContext;
 import org.example.framework.was.container.Servlet;
-import org.example.server.config.SeungPringApplicationConfig;
-import org.example.server.servlet.ServletInfrastructure;
-import org.example.server.was.WasInfrastructure;
+import org.example.framework.infrastructure.application.SeungPringApplicationConfig;
+import org.example.framework.infrastructure.servlet.ServletInfrastructure;
+import org.example.framework.infrastructure.was.WasInfrastructure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

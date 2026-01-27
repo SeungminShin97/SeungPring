@@ -1,7 +1,7 @@
 package org.example;
 
 import org.example.framework.annotation.ComponentScan;
-import org.example.server.SeungPringApplication;
+import org.example.framework.bootstrap.SeungPringApplication;
 
 @ComponentScan("org.example")
 public class Application {

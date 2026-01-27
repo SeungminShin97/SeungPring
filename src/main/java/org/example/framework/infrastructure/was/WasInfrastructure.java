@@ -1,12 +1,12 @@
-package org.example.server.was;
+package org.example.framework.infrastructure.was;
 
 import org.example.framework.was.adapter.DefaultServletAdapter;
 import org.example.framework.was.connector.Connector;
 import org.example.framework.was.container.Servlet;
 import org.example.framework.was.protocol.HttpProtocolSelector;
 import org.example.framework.was.protocol.http.HttpProtocolHandlerFactory;
-import org.example.server.LifeCycle;
-import org.example.server.config.SeungPringApplicationConfig;
+import org.example.framework.LifeCycle.LifeCycle;
+import org.example.framework.infrastructure.application.SeungPringApplicationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package org.example.server.config;
+package org.example.framework.infrastructure.web;
 
 import org.example.framework.annotation.Bean;
 import org.example.framework.annotation.Configuration;
