@@ -187,6 +187,12 @@ public class MyApplicationContext extends AbstractApplicationContext {
             else
                 beanDefinition = new ClassBeanDefinition(clazz, beanName, scopeType, isLazyInit);
 
+            // @Order 검사
+            if (clazz.isAnnotationPresent(Order.class)) {
+                Order order = clazz.getAnnotation(Order.class);
+                beanDefinition.setOrder(order.value());
+            }
+
             // @Primary 검사
             if(clazz.isAnnotationPresent(Primary.class))
                 beanDefinition.setPrimary();
@@ -335,6 +341,12 @@ public class MyApplicationContext extends AbstractApplicationContext {
                 MethodBeanDefinition methodDef =
                         new MethodBeanDefinition(beanName, bean.scope(), bean.lazy(), method, configDef.getBeanName());
 
+                // @Order 처리
+                if (method.isAnnotationPresent(Order.class)) {
+                    Order order = method.getAnnotation(Order.class);
+                    methodDef.setOrder(order.value());
+                }
+
                 registry.registerBeanDefinition(beanName, methodDef);
             }
         }
@@ -361,9 +373,12 @@ public class MyApplicationContext extends AbstractApplicationContext {
      * - singleton 생성 이전에 반드시 호출되어야 한다
      */
     private void registerBeanPostProcessors() {
-        beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
-        beanFactory.addBeanPostProcessor(new PostConstructProcessor());
-        beanFactory.addBeanPostProcessor(new InitializingBeanProcessor());
+        List<BeanDefinition> defs = registry.getBeanDefinitionsByType(BeanPostProcessor.class);
+        defs.stream().sorted(Comparator.comparingInt(BeanDefinition::getOrder))
+                .forEach(def -> {
+                    Object bean = beanFactory.getBean(def.getBeanName());
+                    beanFactory.addBeanPostProcessor((BeanPostProcessor) bean);
+                });
     }
 
     /**

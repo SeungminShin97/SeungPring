@@ -101,12 +101,18 @@ public class MyBeanDefinitionRegistry implements BeanDefinitionRegistry {
         if(primaries.size() == 1)
             return primaries.getFirst();
 
-        if(primaries.isEmpty())
-            throw new IllegalStateException("Multiple beans found for type " + type.getSimpleName() +
-                    " and no @Primary specified: " +candidates.stream().map(BeanDefinition::getBeanName).toList());
+        if(primaries.size() > 1)
+            throw new IllegalStateException("Multiple @Primary beans found for type: " + type);
 
-        throw new IllegalStateException("Multiple @Primary beans found for type " + type.getSimpleName() + ": " +
-                primaries.stream().map(BeanDefinition::getBeanName).toList());
+        candidates.sort(Comparator.comparingInt(BeanDefinition::getOrder));
+
+        BeanDefinition first = candidates.get(0);
+        BeanDefinition second = candidates.get(1);
+
+        if (first.getOrder() == second.getOrder())
+            throw new IllegalStateException("Multiple beans with same order for type: " + type);
+
+        return first;
     }
 
     @Override

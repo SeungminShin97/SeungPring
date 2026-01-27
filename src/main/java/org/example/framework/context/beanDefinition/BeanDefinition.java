@@ -1,6 +1,7 @@
 package org.example.framework.context.beanDefinition;
 
 import org.example.framework.context.ScopeType;
+import org.example.framework.context.capability.OrderCapable;
 
 /**
  * 컨테이너에 등록되는 빈 메타데이터의 공통 추상 정의
@@ -10,11 +11,12 @@ import org.example.framework.context.ScopeType;
  * (이름, 스코프, lazy 여부, 타입 정보)를 캡슐화한다.
  * </p>
  */
-public abstract class BeanDefinition {
+public abstract class BeanDefinition implements OrderCapable {
     private final ScopeType scope;
     private final String beanName;
     private final boolean lazyInit;
     private boolean isPrimary;
+    private int order = Integer.MAX_VALUE;
 
     /**
      * BeanDefinition 기본 생성자
@@ -60,5 +62,15 @@ public abstract class BeanDefinition {
 
     public void setPrimary() {
         this.isPrimary = true;
+    }
+
+    @Override
+    public int getOrder() {
+        return order;
+    }
+
+    @Override
+    public void setOrder(int order) {
+        this.order = order;
     }
 }
