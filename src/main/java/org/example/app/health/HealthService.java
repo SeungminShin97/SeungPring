@@ -1,11 +1,9 @@
 package org.example.app.health;
 
-import org.example.framework.annotation.Component;
+public interface HealthService {
 
-@Component
-public class HealthService {
-
-    public String sbdInfo() {
-        return "3대 500";
-    }
+    String sbdInfo();
+    String benchPress();
+    String slowPushUp();
+    String bench1rm();
 }
