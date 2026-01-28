@@ -6,6 +6,7 @@ import org.example.framework.was.protocol.model.HttpResponse;
 import org.example.framework.web.HandlerMethod;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  * {@code RequestMappingHandlerAdapter}는
@@ -51,6 +52,13 @@ public class RequestMappingHandlerAdapter implements HandlerAdapter{
         if(returnValue instanceof String str) {
             response.writeBody(str);
             return str;
+        }
+
+        if(returnValue instanceof Map<?, ?> map) {
+            String json = map.toString();
+
+            response.writeBody(json);
+            return json;
         }
 
         throw new IllegalStateException(

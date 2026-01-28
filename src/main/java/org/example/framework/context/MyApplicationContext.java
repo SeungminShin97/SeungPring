@@ -7,9 +7,8 @@ import org.example.framework.context.beanDefinition.ConfigurationBeanDefinition;
 import org.example.framework.context.beanDefinition.MethodBeanDefinition;
 import org.example.framework.context.capability.LazyProxyCapable;
 import org.example.framework.context.processor.ApplicationContextAwareProcessor;
-import org.example.framework.context.processor.InitializingBeanProcessor;
-import org.example.framework.context.processor.PostConstructProcessor;
 import org.example.framework.core.*;
+import org.example.framework.core.lifecycle.BeanPostProcessor;
 import org.example.framework.core.lifecycle.SmartInitializingSingleton;
 import org.example.framework.exception.ComponentScanException;
 import org.slf4j.Logger;
@@ -373,6 +372,8 @@ public class MyApplicationContext extends AbstractApplicationContext {
      * - singleton 생성 이전에 반드시 호출되어야 한다
      */
     private void registerBeanPostProcessors() {
+        beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
+
         List<BeanDefinition> defs = registry.getBeanDefinitionsByType(BeanPostProcessor.class);
         defs.stream().sorted(Comparator.comparingInt(BeanDefinition::getOrder))
                 .forEach(def -> {
