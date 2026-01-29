@@ -93,8 +93,6 @@ public class OutputBuffer {
         // Content-Length
         String contentLength = "Content-Length: " + response.getBody().getContentLengthLong() + "\r\n";
 
-        // TODO: Connection 필드 구현
-
         // Content-Type
         String contentType = response.getHeader().getFirst("Content-Type");
         if (contentType == null || contentType.isEmpty()) {

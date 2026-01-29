@@ -7,15 +7,15 @@ import org.example.framework.was.protocol.HttpProtocolSelector;
 import org.example.framework.was.protocol.HttpProtocolVersion;
 import org.example.framework.was.protocol.core.HttpProtocolHandler;
 import org.example.framework.was.protocol.http.HttpProtocolHandlerFactory;
+import org.example.framework.was.protocol.http.http1.Http1ProtocolHandler;
 import org.example.framework.was.protocol.model.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 /**
  * 클라이언트와 연결된 소켓 하나를 처리하는 Runnable.
@@ -30,6 +30,9 @@ import java.net.Socket;
  */
 public class SocketProcessor implements Runnable{
     private static final Logger log = LoggerFactory.getLogger(SocketProcessor.class);
+
+    private static final int KEEP_ALIVE_TIMEOUT_MS = 5_000;
+    private static final int MAX_KEEP_ALIVE_REQUESTS = 100;
 
     private final Socket socket;
     private final HttpProtocolSelector selector;
@@ -54,6 +57,8 @@ public class SocketProcessor implements Runnable{
         OutputStream out = null;
         HttpProtocolHandler handler = null;
         try (socket) {
+            socket.setSoTimeout(KEEP_ALIVE_TIMEOUT_MS);
+
             InputStream raw = socket.getInputStream();
             BufferedInputStream in = new BufferedInputStream(raw);
             out = socket.getOutputStream();
@@ -64,15 +69,40 @@ public class SocketProcessor implements Runnable{
 
             handler = handlerFactory.getHandler(version);
 
+            // HTTP/1.1인 경우 keep-alive 루프 적용
+            if (handler instanceof Http1ProtocolHandler http1) {
+                for (int i = 0; i < MAX_KEEP_ALIVE_REQUESTS; i++) {
+                    try {
+                        boolean keepAlive = http1.processOnce(in, out);
+                        if (!keepAlive) break;
+                    } catch (SocketTimeoutException e) {
+                        log.debug("[SocketProcessor] Idle timeout, closing connection");
+                        break;
+                    } catch (HttpParsingException e) {
+                        sendErrorResponse(handler, out, HttpStatus.BAD_REQUEST, e);
+                        break;
+                    } catch (HttpWritingException e) {
+                        sendErrorResponse(handler, out, HttpStatus.INTERNAL_SERVER_ERROR, e);
+                        break;
+                    } catch (Exception e) {
+                        log.error("[SocketProcessor] Uncaught Internal Server Exception (500): {}", e.getMessage(), e);
+                        sendErrorResponse(handler, out, HttpStatus.INTERNAL_SERVER_ERROR, e);
+                        break;
+                    }
+                }
+                return;
+            }
+
+            // 그 외(HTTP/2 등): 기존 단발 처리
             handler.process(in, out);
+        } catch (SocketTimeoutException e) {
+            log.debug("[SocketProcessor] Idle timeout before request");
+        } catch (EOFException | SocketException e) {
+            log.debug("[SocketProcessor] Client closed connection");
         } catch (IOException e) {
-            log.error("[SocketProcessor] Socket I/O Error, connection closed by client/network: {}", e.getMessage());
+            log.warn("[SocketProcessor] Socket I/O Error, connection closed by client/network: {}", e.getMessage());
         } catch (HttpVersionDetectionException e) {
-            log.error("[SocketProcessor] Cannot detect Http Version, connection closed by client/network: {}", e.getMessage());
-        } catch (HttpParsingException e) {
-            sendErrorResponse(handler, out, HttpStatus.BAD_REQUEST, e);
-        } catch (HttpWritingException e) {
-            sendErrorResponse(handler, out, HttpStatus.INTERNAL_SERVER_ERROR, e);
+            log.error("[SocketProcessor] Cannot detect HTTP version: {}", e.getMessage());
         } catch (Exception e) {
             log.error("[SocketProcessor] Uncaught Internal Server Exception (500): {}", e.getMessage(), e);
             sendErrorResponse(handler, out, HttpStatus.INTERNAL_SERVER_ERROR, e);

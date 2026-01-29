@@ -7,6 +7,7 @@ package org.example.framework.was.protocol;
  */
 public enum HttpProtocolVersion {
 
+    HTTP_1_0(1, "HTTP/1.0"),
     HTTP_1_1(1, "HTTP/1.1"),
     HTTP_2_0(2, "HTTP/2.0");
 

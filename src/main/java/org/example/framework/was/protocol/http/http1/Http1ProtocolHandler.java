@@ -38,7 +38,7 @@ public class Http1ProtocolHandler extends HttpProtocolHandler {
      * HTTP/1.1 요청을 처리하고 응답을 전송한다.
      * <p>
      * 1. {@link RequestParser}를 이용해 요청을 파싱한다.
-     * 2. (TODO: 디스패처 서블릿 호출)
+     * 2. {@link ServletAdapter}를 이용해 요청을 처리한다.
      * 3. {@link ResponseWriter}를 이용해 응답을 클라이언트에게 전송한다.
      *
      * @param inputStream 클라이언트로부터의 입력 스트림 (요청 데이터)
@@ -50,11 +50,27 @@ public class Http1ProtocolHandler extends HttpProtocolHandler {
      */
     @Override
     public void process(InputStream inputStream, OutputStream outputStream) throws Exception {
+        processOnce(inputStream, outputStream);
+    }
+
+
+    /**
+     * 기존 계약(1회 처리)을 유지한다.
+     *
+     * - 호출 시점: keep-alive 미지원/단발 처리 경로
+     */
+    public boolean processOnce(InputStream inputStream, OutputStream outputStream) throws Exception {
         HttpRequest request = super.requestParser.parse(inputStream);
+
+        boolean keepAlive = KeepAlivePolicy.shouldKeepAlive(request);
+
         HttpResponse response = new HttpResponse(HttpProtocolVersion.HTTP_1_1);
+        response.getHeader().put("Connection", keepAlive ? "keep-alive" : "close");
 
         adapter.service(request,response);
         super.responseWriter.write(outputStream, response);
+
+        return keepAlive;
     }
 
     /**
