@@ -6,10 +6,7 @@ import org.example.framework.was.protocol.core.RequestParser;
 import org.example.framework.was.protocol.http.http1.Http1RequestParser;
 import org.example.framework.was.protocol.model.HttpMethod;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
@@ -45,7 +42,7 @@ public class HttpProtocolSelector {
     public HttpProtocolVersion detect(InputStream inputStream) throws IOException, HttpVersionDetectionException {
         byte[] first = inputStream.readNBytes(H2_PREFACE_LEN);
         if (first.length == 0)
-            throw new HttpVersionDetectionException("Empty request preface");
+            throw new EOFException("Empty request preface");
 
         String firstText = new String(first, StandardCharsets.US_ASCII);
 

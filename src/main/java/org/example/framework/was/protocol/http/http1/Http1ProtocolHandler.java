@@ -59,18 +59,54 @@ public class Http1ProtocolHandler extends HttpProtocolHandler {
      *
      * - 호출 시점: keep-alive 미지원/단발 처리 경로
      */
-    public boolean processOnce(InputStream inputStream, OutputStream outputStream) throws Exception {
-        HttpRequest request = super.requestParser.parse(inputStream);
-
-        boolean keepAlive = KeepAlivePolicy.shouldKeepAlive(request);
-
+    public boolean processOnce(InputStream in, OutputStream out) throws IOException, HttpWritingException {
+        HttpRequest request;
         HttpResponse response = new HttpResponse(HttpProtocolVersion.HTTP_1_1);
-        response.getHeader().put("Connection", keepAlive ? "keep-alive" : "close");
 
-        adapter.service(request,response);
-        super.responseWriter.write(outputStream, response);
+        try {
+            request = requestParser.parse(in);
 
-        return keepAlive;
+            boolean keepAlive = KeepAlivePolicy.shouldKeepAlive(request);
+            response.getHeader().put("Connection", keepAlive ? "keep-alive" : "close");
+
+            adapter.service(request, response);
+            responseWriter.write(out, response);
+
+            return keepAlive;
+
+        } catch (HttpParsingException e) {
+            writeError(out, HttpStatus.BAD_REQUEST, e);
+            return false;
+
+        } catch (Exception e) {
+            writeError(out, HttpStatus.INTERNAL_SERVER_ERROR, e);
+            return false;
+        }
+    }
+
+    private void writeError(OutputStream out, HttpStatus status, Throwable e) throws IOException, HttpWritingException {
+        String body = String.format(
+                "<h1>%d %s</h1><p>%s</p>",
+                status.code(),
+                status.reason(),
+                e.getMessage()
+        );
+
+        byte[] data = body.getBytes(StandardCharsets.UTF_8);
+
+        HttpHeader header = new HttpHeader();
+        header.put("Content-Type", "text/html; charset=utf-8");
+        header.put("Content-Length", String.valueOf(data.length));
+        header.put("Connection", "close");
+
+        HttpResponse response = new HttpResponse(
+                header,
+                new HttpBody(data),
+                HttpProtocolVersion.HTTP_1_1,
+                status
+        );
+
+        responseWriter.write(out, response);
     }
 
     /**
