@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * 블로킹 I/O 기반 Endpoint 구현체.
@@ -45,13 +46,19 @@ public class BioEndpoint extends AbstractEndpoint{
     protected void acceptLoop() throws IOException {
         log.info("[BioEndpoint] Waiting for client connections...");
 
+        Socket clientSocket = null;
+
         while(isRunning()) {
             try {
                 // 블로킹 accept
-                Socket clientSocket = serverSocket.accept();
+                clientSocket = serverSocket.accept();
                 log.info("[BioEndpoint] Accepted {}", clientSocket.getRemoteSocketAddress());
                 // 요청 처리
                 executor.execute(new SocketProcessor(clientSocket, selector, handlerFactory));
+            } catch (RejectedExecutionException e) {
+                log.warn("[BioEndpoint] Request rejected due to saturation");
+                if(clientSocket != null)
+                    clientSocket.close(); // 중요
             } catch (IOException e) {
                 if(isRunning())
                     log.info("[BioEndpoint] Error accepting connection: {}", e.getMessage());

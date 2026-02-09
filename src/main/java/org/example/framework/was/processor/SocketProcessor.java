@@ -65,6 +65,9 @@ public class SocketProcessor implements Runnable{
             HttpProtocolVersion version = selector.detect(in);
             in.reset();
 
+            if(version == null)
+                return;
+
             HttpProtocolHandler handler = handlerFactory.getHandler(version);
 
             if (handler instanceof Http1ProtocolHandler http1) {

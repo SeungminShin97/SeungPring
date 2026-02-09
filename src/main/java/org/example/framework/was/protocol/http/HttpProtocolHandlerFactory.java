@@ -34,6 +34,9 @@ public class HttpProtocolHandlerFactory {
      * @return 해당 버전의 프로토콜 처리를 담당하는 핸들러
      */
     public HttpProtocolHandler getHandler(HttpProtocolVersion version) {
+        if(version == HttpProtocolVersion.HTTP_1_0)
+            return new Http1ProtocolHandler(adapter);
+
         if(version == HttpProtocolVersion.HTTP_1_1)
             return new Http1ProtocolHandler(adapter);
 
