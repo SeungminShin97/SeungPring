@@ -18,73 +18,62 @@ public final class WasInfrastructure implements LifeCycle {
     private static final Logger log = LoggerFactory.getLogger(WasInfrastructure.class);
 
     private ScheduledExecutorService monitor;
-    private final AtomicInteger rejectedCount = new AtomicInteger();
 
     private final ExecutorService executor;
+    private final boolean virtualMode;
+    private final AtomicInteger rejectedCount = new AtomicInteger();
+
     private final Connector connector;
 
     public WasInfrastructure(SeungPringApplicationConfig config, Servlet servlet) {
-        // 기본 스레드풀
-//        this.executor = Executors.newFixedThreadPool(config.workerThreads());
+        this.virtualMode = config.virtualEnabled();
 
-//        // 무제한 큐
-//        BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
-//        this.executor = new ThreadPoolExecutor(
-//                config.workerThreads(), // core
-//                config.workerThreads(), // max
-//                0L,
-//                TimeUnit.MILLISECONDS,
-//                queue,
-//                new ThreadPoolExecutor.AbortPolicy()
-//        );
+        if (!virtualMode) {
+            // ================= BIO =================
+            BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(30);
 
-        // 제한 큐 + Fail-fast
-        BlockingQueue<Runnable> queue =
-                new ArrayBlockingQueue<>(30);
+            RejectedExecutionHandler handler = (r, exec) -> {
+                rejectedCount.incrementAndGet();
+                throw new RejectedExecutionException("BIO executor saturated");
+            };
 
-        AtomicInteger rejectedCount = new AtomicInteger();
-
-        RejectedExecutionHandler handler = (r, exec) -> {
-            rejectedCount.incrementAndGet();
-            throw new RejectedExecutionException("BIO executor saturated");
-        };
-        this.executor = new ThreadPoolExecutor(
-                config.workerThreads(),
-                config.workerThreads(),
-                0L,
-                TimeUnit.MILLISECONDS,
-                queue,
-                handler
-        );
+            executor = new ThreadPoolExecutor(
+                    config.workerThreads(),
+                    config.workerThreads(),
+                    0L,
+                    TimeUnit.MILLISECONDS,
+                    queue,
+                    handler
+            );
+        } else {
+            executor = Executors.newVirtualThreadPerTaskExecutor();
+        }
 
         HttpProtocolSelector selector = new HttpProtocolSelector();
-
         HttpProtocolHandlerFactory handlerFactory =
                 HttpProtocolHandlerFactory.create(new DefaultServletAdapter(servlet));
 
-        this.connector = new Connector(
-                config.port(),
-                executor,
-                selector,
-                handlerFactory
-        );
+        this.connector = new Connector(config.port(), executor, true,selector, handlerFactory);
     }
 
     @Override
     public void start() throws Exception {
-        log.info("[WAS] Initializing server resources");
+        log.info("[WAS] Initializing server resources (VirtualMode: {})", virtualMode);
 
         monitor = Executors.newSingleThreadScheduledExecutor();
         monitor.scheduleAtFixedRate(() -> {
-            if (executor instanceof ThreadPoolExecutor tpe) {
-                log.info(
-                        "[EXECUTOR] active={} queue={} rejected={}",
+            // BIO 모드일 때만 상세 지표 출력 (ThreadPoolExecutor인 경우만 가능)
+            if (!virtualMode && executor instanceof ThreadPoolExecutor tpe) {
+                log.info("[BIO] active={} queue={} rejected={}",
                         tpe.getActiveCount(),
                         tpe.getQueue().size(),
                         rejectedCount.get()
                 );
+            } else if (virtualMode) {
+                // 가상 스레드는 고정된 풀이 없으므로 단순 상태만 출력
+                log.info("[VIRTUAL] Processing requests via Virtual Threads...");
             }
-        }, 0, 1, TimeUnit.SECONDS);
+        }, 0, 5, TimeUnit.SECONDS); // 너무 자주 찍히면 정신없으니 5초 정도로 조절 추천
 
         connector.start();
         log.info("[WAS] Server initialization complete");
@@ -93,11 +82,27 @@ public final class WasInfrastructure implements LifeCycle {
     @Override
     public void stop() throws Exception {
         log.info("[WAS] Shutting down server");
-        connector.stop();
-        executor.shutdown();
 
-        if(monitor != null)
+        // 1. 새로운 연결 수락 중단
+        connector.stop();
+
+        // 2. 실행 중인 작업 완료 대기 및 종료
+        if (executor != null) {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        // 3. 모니터링 종료
+        if (monitor != null) {
             monitor.shutdown();
+        }
 
         log.info("[WAS] Server shutdown complete");
     }

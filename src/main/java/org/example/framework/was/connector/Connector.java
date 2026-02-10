@@ -2,6 +2,7 @@ package org.example.framework.was.connector;
 
 import org.example.framework.was.endpoint.AbstractEndpoint;
 import org.example.framework.was.endpoint.BioEndpoint;
+import org.example.framework.was.endpoint.VirtualBioEndpoint;
 import org.example.framework.was.protocol.HttpProtocolSelector;
 import org.example.framework.was.protocol.http.HttpProtocolHandlerFactory;
 import org.example.framework.LifeCycle.LifeCycle;
@@ -24,23 +25,26 @@ public class Connector implements LifeCycle {
     /** HTTP Handler Factory */
     private final HttpProtocolHandlerFactory handlerFactory;
 
-    public Connector(
-            int port,
-            ExecutorService executor,
-            HttpProtocolSelector selector,
-            HttpProtocolHandlerFactory handlerFactory
-    ) {
-        this.port = port;
+    public Connector(int port, ExecutorService executor, boolean isVirtual, HttpProtocolSelector selector, HttpProtocolHandlerFactory handlerFactory) {
         this.selector = selector;
         this.handlerFactory = handlerFactory;
 
-        // TODO: 추후 bio/nio 선택 기능 추가
-        this.endpoint = new BioEndpoint(
-                port,
-                executor,
-                selector,
-                handlerFactory
-        );
+        if(!isVirtual) {
+            this.endpoint = new BioEndpoint(
+                    port,
+                    executor,
+                    selector,
+                    handlerFactory
+            );
+        } else {
+            this.endpoint = new VirtualBioEndpoint(
+                    port,
+                    executor,
+                    selector,
+                    handlerFactory
+            );
+        }
+        this.port = port;
     }
 
     /**

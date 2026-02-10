@@ -26,7 +26,10 @@ public record SeungPringApplicationConfig(
         int workerThreads,
 
         // IoC
-        String[] basePackages
+        String[] basePackages,
+
+        // Thread
+        boolean virtualEnabled
 
 ) {
 
@@ -73,7 +76,8 @@ public record SeungPringApplicationConfig(
         return new SeungPringApplicationConfig(
                 port,
                 workerThreads,
-                basePackages.toArray(String[]::new)
+                basePackages.toArray(String[]::new),
+                true
         );
     }
 
