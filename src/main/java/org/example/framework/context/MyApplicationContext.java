@@ -75,14 +75,31 @@ public class MyApplicationContext extends AbstractApplicationContext {
         // 1. 컴포넌트 스캔 + BeanDefinition 등록
         refreshBeanFactory();
 
+        log.info("---- [CANDIDATE BEANS : BeanDefinition] ----");
+        registry.getBeanDefinitions().forEach(def ->
+                log.info("[CANDIDATE] name={}, type={}, lazy={}, lazyProxy={}",
+                        def.getBeanName(),
+                        def.getResolvableType().getSimpleName(),
+                        def.isLazyInit(),
+                        (def instanceof LazyProxyCapable c && c.isLazyProxy())
+                )
+        );
+
         // 2. Bean 등록
         processConfigurationBeans();
 
         // 3. BeanPostProcessor 등록
         registerBeanPostProcessors();
 
+
         // 4. Lazy 제외 singleton Bean 생성
         preInstantiateSingletons();
+
+        beanFactory.getSingleton().forEach((name, bean) ->
+                log.info("[INSTANTIATED] {} -> {}",
+                        name,
+                        bean.getClass().getSimpleName())
+        );
 
         // 5. singleton 전체 초기화 완료 후 콜백
         invokeSmartInitializingSingletons();

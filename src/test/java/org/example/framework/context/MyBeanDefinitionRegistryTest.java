@@ -1,6 +1,7 @@
 package org.example.framework.context;
 
 import org.example.framework.context.beanDefinition.BeanDefinition;
+import org.example.framework.context.beanDefinition.ClassBeanDefinition;
 import org.example.framework.exception.bean.NoSuchBeanDefinitionException;
 import org.example.test.DummyService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,7 @@ class MyBeanDefinitionRegistryTest {
     }
 
     private BeanDefinition createDummyBeanDefinition(String name, Class<?> clazz) {
-        return new BeanDefinition(clazz, name, ScopeType.SINGLETON);
+        return new ClassBeanDefinition(DummyService.class);
     }
 
     @Test

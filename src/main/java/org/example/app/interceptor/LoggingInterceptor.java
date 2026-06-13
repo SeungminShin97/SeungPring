@@ -10,12 +10,12 @@ public class LoggingInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpRequest request, HttpResponse response, Object handler) throws Exception {
-        System.out.println("[PRE] " + request.getMethod() + " " + request.getPath());
+//        System.out.println("[PRE] " + request.getMethod() + " " + request.getPath());
         return true;
     }
 
     @Override
     public void afterCompletion(HttpRequest request, HttpResponse response, Object handler, Exception ex) throws Exception {
-        System.out.println("[AFTER] status=" + response.getStatus());
+//        System.out.println("[AFTER] status=" + response.getStatus());
     }
 }

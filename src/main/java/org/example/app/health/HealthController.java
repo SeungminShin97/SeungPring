@@ -16,7 +16,8 @@ public class HealthController {
     }
 
     @RequestMapping(value = "/health", method = HttpMethod.GET)
-    public String healthCheck() {
+    public String healthCheck() throws InterruptedException {
+        Thread.sleep(50);
         return "good!";
     }
 

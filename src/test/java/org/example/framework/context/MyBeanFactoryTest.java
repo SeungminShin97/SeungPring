@@ -2,6 +2,7 @@ package org.example.framework.context;
 
 import org.example.framework.annotation.Autowired;
 import org.example.framework.context.beanDefinition.BeanDefinition;
+import org.example.framework.context.beanDefinition.ClassBeanDefinition;
 import org.example.framework.core.BeanDefinitionRegistry;
 import org.example.framework.core.BeanFactory;
 import org.example.framework.exception.bean.BeanCreationException;
@@ -61,8 +62,8 @@ class MyBeanFactoryTest {
     @BeforeEach
     void given() {
         registry = new MyBeanDefinitionRegistry();
-        registry.registerBeanDefinition(DUMMY_SERVICE, new BeanDefinition(DummyService.class, ScopeType.SINGLETON));
-        registry.registerBeanDefinition(DUMMY_CONTROLLER, new BeanDefinition(DummyController.class, ScopeType.SINGLETON));
+        registry.registerBeanDefinition(DUMMY_SERVICE, new ClassBeanDefinition(DummyService.class, ScopeType.SINGLETON));
+        registry.registerBeanDefinition(DUMMY_CONTROLLER, new ClassBeanDefinition(DummyController.class, ScopeType.SINGLETON));
 
         factory = new MyBeanFactory(new MyDependencyInjector(), registry);
     }
@@ -121,8 +122,8 @@ class MyBeanFactoryTest {
     @DisplayName("@Autowired 기반 생성자 DI가 정상적으로 이루어져야 한다.")
     public void should_inject_dependency_via_autowired_constructor() {
         //given
-        BeanDefinition childBean = new BeanDefinition(DummyChildService.class, ScopeType.SINGLETON);
-        BeanDefinition dummyBean = new BeanDefinition(DummyBean.class, ScopeType.SINGLETON);
+        BeanDefinition childBean = new ClassBeanDefinition(DummyChildService.class, ScopeType.SINGLETON);
+        BeanDefinition dummyBean = new ClassBeanDefinition(DummyBean.class, ScopeType.SINGLETON);
         registry.registerBeanDefinition(childBean);
         registry.registerBeanDefinition(dummyBean);
         
@@ -161,7 +162,7 @@ class MyBeanFactoryTest {
         @DisplayName("아직 생성되지 않은 prototype bean도 타입 조회는 가능하다")
         void should_Return_Type_For_Prototype_Before_Creation() {
             registry.registerBeanDefinition("proto",
-                    new BeanDefinition(DummyController.class, "proto", ScopeType.PROTOTYPE));
+                    new ClassBeanDefinition(DummyController.class, "proto", ScopeType.PROTOTYPE));
 
             Class<?> type = factory.getType("proto");
 
@@ -196,7 +197,7 @@ class MyBeanFactoryTest {
         void should_Return_False_When_ProtoType() {
             // when
             registry.registerBeanDefinition("protoController",
-                    new BeanDefinition(DummyController.class, "protoController", ScopeType.PROTOTYPE));
+                    new ClassBeanDefinition(DummyController.class, "protoController", ScopeType.PROTOTYPE));
 
             // then
             assertNotNull(factory.getBean("protoController"));
@@ -221,7 +222,7 @@ class MyBeanFactoryTest {
         void should_Return_True_When_Prototype() {
             // when
             registry.registerBeanDefinition("protoController",
-                    new BeanDefinition(DummyController.class, "protoController", ScopeType.PROTOTYPE));
+                    new ClassBeanDefinition(DummyController.class, "protoController", ScopeType.PROTOTYPE));
 
             // then
             assertNotNull(factory.getBean("protoController"));
@@ -255,9 +256,9 @@ class MyBeanFactoryTest {
         void should_Return_True_When_Type_Is_Assignable() {
             // given
             registry.registerBeanDefinition("dummyService2",
-                    new BeanDefinition(DummyService.class, "dummyService2"));
+                    new ClassBeanDefinition(DummyService.class, "dummyService2"));
             registry.registerBeanDefinition("childService",
-                    new BeanDefinition(DummyChildService.class, "childService"));
+                    new ClassBeanDefinition(DummyChildService.class, "childService"));
 
             // when
             // then
@@ -270,7 +271,7 @@ class MyBeanFactoryTest {
         void should_Return_False_When_Type_Not_Assignable() {
             // given
             registry.registerBeanDefinition("childService",
-                    new BeanDefinition(DummyChildService.class, "childService"));
+                    new ClassBeanDefinition(DummyChildService.class, "childService"));
 
             // when
             // then
@@ -283,7 +284,7 @@ class MyBeanFactoryTest {
     @DisplayName("@Autowired 생성자가 둘 이상이면 예외가 발생한다")
     void should_Throw_When_Multiple_Autowired_Constructors() {
         registry.registerBeanDefinition("multi",
-                new BeanDefinition(MultiAutowiredConstructorBean.class, ScopeType.SINGLETON));
+                new ClassBeanDefinition(MultiAutowiredConstructorBean.class, ScopeType.SINGLETON));
 
         assertThrows(BeanCreationException.class,
                 () -> factory.getBean("multi"));
@@ -293,12 +294,12 @@ class MyBeanFactoryTest {
     @DisplayName("List<T> 생성자 파라미터에는 해당 타입의 모든 하위 Bean이 주입된다")
     void should_Inject_List_Of_Beans() {
         registry.registerBeanDefinition("s1",
-                new BeanDefinition(DummyService.class, "s1"));
+                new ClassBeanDefinition(DummyService.class, "s1"));
         registry.registerBeanDefinition("s2",
-                new BeanDefinition(DummyService.class, "s2"));
+                new ClassBeanDefinition(DummyService.class, "s2"));
 
         registry.registerBeanDefinition("listBean",
-                new BeanDefinition(ListInjectionBean.class, "listBean"));
+                new ClassBeanDefinition(ListInjectionBean.class, "listBean"));
 
         ListInjectionBean bean = factory.getBean(ListInjectionBean.class);
 
@@ -308,8 +309,8 @@ class MyBeanFactoryTest {
     @Test
     @DisplayName("순환 참조가 발생하면 CircularDependencyException이 발생한다")
     void should_Throw_When_Circular_Dependency() {
-        registry.registerBeanDefinition("a", new BeanDefinition(A.class, "a"));
-        registry.registerBeanDefinition("b", new BeanDefinition(B.class, "b"));
+        registry.registerBeanDefinition("a", new ClassBeanDefinition(A.class, "a"));
+        registry.registerBeanDefinition("b", new ClassBeanDefinition(B.class, "b"));
 
         assertThrows(BeanCreationException.class, () -> factory.getBean("a"));
     }

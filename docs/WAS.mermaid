@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant Client
+    participant ServerSocket
+    participant Endpoint as BioEndpoint
+    participant Executor
+    participant Processor as SocketProcessor
+    participant Selector as HttpProtocolSelector
+    participant Factory as HttpProtocolHandlerFactory
+    participant Handler as HttpProtocolHandler
+
+    Client ->> ServerSocket: TCP Connect
+    ServerSocket ->> Endpoint: accept()
+    Endpoint ->> Executor: execute(SocketProcessor)
+    Executor ->> Processor: run()
+    
+    Processor ->> Selector: detect(InputStream)
+    Selector -->> Processor: HTTP/1.1  
+    Processor ->> Factory: getHandler()
+    Factory -->> Processor: Http1ProtocolHandler
+
+    Processor ->> Handler: process(InputStream, OutputStream)
+    Handler ->> Client: write(OutputStream)

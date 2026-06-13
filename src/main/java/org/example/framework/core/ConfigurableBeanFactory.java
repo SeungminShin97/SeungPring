@@ -2,6 +2,8 @@ package org.example.framework.core;
 
 import org.example.framework.core.lifecycle.BeanPostProcessor;
 
+import java.util.Map;
+
 /**
  * BeanFactory의 구성/라이프사이클 확장용 인터페이스.
  *
@@ -20,4 +22,6 @@ public interface ConfigurableBeanFactory extends BeanFactory {
 
     /** singleton Bean을 파기한다. */
     void destroySingletons();
+
+    Map<String, Object> getSingleton();
 }

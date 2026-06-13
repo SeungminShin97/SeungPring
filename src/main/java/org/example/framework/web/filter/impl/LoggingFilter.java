@@ -17,7 +17,7 @@ public class LoggingFilter implements Filter {
             chain.doFilter(request, response);
         } finally {
             long elapsed = System.currentTimeMillis() - start;
-            System.out.println("[FILTER]" + request.getPath() + " " + elapsed + "ms");
+//            System.out.println("[FILTER]" + request.getPath() + " " + elapsed + "ms");
         }
     }
 }

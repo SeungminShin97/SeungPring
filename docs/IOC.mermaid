@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant App as Application
+    participant Context as MyApplicationContext
+    participant Scanner as ComponentScanner
+    participant Registry as BeanDefinitionRegistry
+    participant Factory as BeanFactory
+    participant Injector as DependencyInjector
+    participant Controller
+    participant Service
+
+    App ->> Context: new MyApplicationContext()
+    Context ->> Scanner: scan(basePackages)
+    Scanner -->> Context: @Component classes
+    Context ->> Registry: register BeanDefinitions
+
+    Context ->> Factory: getBean(Controller)
+    Factory ->> Controller: new Controller()
+    Factory ->> Injector: inject(Controller)
+    Injector ->> Factory: getBean(Service)
+    Factory ->> Service: new Service()
